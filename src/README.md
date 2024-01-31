@@ -29,8 +29,8 @@ $ pip install cctrusted-vm
 If you would like to run from source code. Try:
 
 ```
-$ git clone https://github.com/cc-api/cc-trusted-api.git
-$ cd cc-trusted-api
+$ git clone https://github.com/cc-api/cc-trusted-vmsdk.git
+$ cd cc-trusted-vmsdk
 $ source setupenv.sh
 ```
 
@@ -46,8 +46,8 @@ It provides 3 CLI tools for quick usage of Python VMSDK.
 How to run the CLI tool:
 
 ```
-$ git clone https://github.com/cc-api/cc-trusted-api.git
-$ cd cc-trusted-api
+$ git clone https://github.com/cc-api/cc-trusted-vmsdk.git
+$ cd cc-trusted-vmsdk
 $ sudo su
 $ source setupenv.sh
 $ python3 vmsdk/python/cc_imr_cli.py
@@ -64,8 +64,8 @@ Below is example output of `cc_imr_cli.py`.
 It provides test cases for Python VMSDK. Run tests with below commands.
 
 ```
-$ git clone https://github.com/cc-api/cc-trusted-api.git
-$ cd cc-trusted-api
+$ git clone https://github.com/cc-api/cc-trusted-vmsdk.git
+$ cd cc-trusted-vmsdk
 $ sudo su
 $ source setupenv.sh
 $ python3 -m pip install pytest

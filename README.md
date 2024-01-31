@@ -38,7 +38,7 @@ If you would like to run from source code. Try:
 
 ```
 $ git clone https://github.com/cc-api/cc-trusted-vmsdk.git
-$ cd cc-trusted-vmsdk/src
+$ cd cc-trusted-vmsdk
 $ source setupenv.sh
 ```
 
@@ -55,7 +55,7 @@ How to run the CLI tool:
 
 ```
 $ git clone https://github.com/cc-api/cc-trusted-vmsdk.git
-$ cd cc-trusted-vmsdk/src
+$ cd cc-trusted-vmsdk
 $ sudo su
 $ source setupenv.sh
 $ python3 vmsdk/python/cc_imr_cli.py
@@ -72,7 +72,7 @@ It provides test cases for Python VMSDK. Run tests with the below commands.
 
 ```
 $ git clone https://github.com/cc-api/cc-trusted-vmsdk.git
-$ cd cc-trusted-vmsdk/src
+$ cd cc-trusted-vmsdk
 $ sudo su
 $ source setupenv.sh
 $ python3 -m pip install pytest

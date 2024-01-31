@@ -50,7 +50,7 @@ $ git clone https://github.com/cc-api/cc-trusted-vmsdk.git
 $ cd cc-trusted-vmsdk
 $ sudo su
 $ source setupenv.sh
-$ python3 vmsdk/python/cc_imr_cli.py
+$ python3 ./src/python/cc_imr_cli.py
 ```
 _NOTE: The CLI tool needs to run via root user._
 
@@ -69,7 +69,7 @@ $ cd cc-trusted-vmsdk
 $ sudo su
 $ source setupenv.sh
 $ python3 -m pip install pytest
-$ python3 -m pytest -v ./vmsdk/python/tests/test_sdk.py
+$ python3 -m pytest -v ./src/python/tests/test_sdk.py
 ```
 
 _NOTE: The tests need to run via root user._

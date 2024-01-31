@@ -21,6 +21,8 @@
 # - To get consistent TD_REPORT within guest cross power cycle, please keep
 #   consistent configurations for TDX guest such as same MAC address.
 #
+set -m 
+set -x
 
 CURR_DIR=$(readlink -f "$(dirname "$0")")
 
@@ -35,23 +37,25 @@ else
 fi
 
 # VM configurations
-CPUS=4
-MEM=16G
+CPUS=8
+MEM=2G
+SGX_EPC_SIZE=64M
 
 # Installed from the package of intel-mvp-tdx-tdvf
 OVMF="/usr/share/qemu/OVMF.fd"
 GUEST_IMG=""
-DEFAULT_GUEST_IMG="${CURR_DIR}/output.qcow2"
+DEFAULT_GUEST_IMG="./td-guest-ubuntu-22.04.qcow2"
 KERNEL=""
-DEFAULT_KERNEL="${CURR_DIR}/vmlinuz"
-VM_TYPE="legacy"
-BOOT_TYPE="grub"
+DEFAULT_KERNEL="/boot/vmlinuz"
+VM_TYPE="td"
+BOOT_TYPE="direct"
 DEBUG=false
 USE_VSOCK=false
 USE_SERIAL_CONSOLE=false
 FORWARD_PORT=10026
 MONITOR_PORT=9001
 ROOT_PARTITION="/dev/vda1"
+#ROOT_PARTITION="/dev/vda2"
 KERNEL_CMD_NON_TD="root=${ROOT_PARTITION} rw console=hvc0"
 KERNEL_CMD_TD="${KERNEL_CMD_NON_TD}"
 MAC_ADDR=""
@@ -84,7 +88,7 @@ usage() {
 Usage: $(basename "$0") [OPTION]...
   -i <guest image file>     Default is td-guest.qcow2 under current directory
   -k <kernel file>          Default is vmlinuz under current directory
-  -t [legacy|efi|td]        VM Type, default is "legacy"
+  -t [legacy|efi|td|sgx]    VM Type, default is "td"
   -b [direct|grub]          Boot type, default is "direct" which requires kernel binary specified via "-k"
   -p <Monitor port>         Monitor via telnet
   -f <SSH Forward port>     Host port for forwarding guest SSH
@@ -217,7 +221,7 @@ process_args() {
                 PARAM_CPU+=",tsc-freq=1000000000"
             fi
             # Note: "pic=no" could only be used in TD mode but not for non-TD mode
-            PARAM_MACHINE+=",kernel_irqchip=split,memory-encryption=tdx,memory-backend=ram1"
+            PARAM_MACHINE+=",kernel_irqchip=split,confidential-guest-support=tdx"
             QEMU_CMD+=" -bios ${OVMF}"
             QEMU_CMD+=" -object tdx-guest,sept-ve-disable=on,id=tdx"
             if [[ ${QUOTE_TYPE} == "tdvmcall" ]]; then
@@ -229,7 +233,6 @@ process_args() {
             if [[ ${DEBUG} == true ]]; then
                 QEMU_CMD+=",debug=on"
             fi
-	    QEMU_CMD+=" -object memory-backend-ram,id=ram1,size=${MEM},private=on"
             ;;
         "efi")
             PARAM_MACHINE+=",kernel_irqchip=split"
@@ -241,8 +244,13 @@ process_args() {
             fi
             QEMU_CMD+=" -bios ${LEGACY_BIOS} "
             ;;
+        "sgx")
+            PARAM_MACHINE+=",sgx-epc.0.memdev=mem0,sgx-epc.0.node=0"
+            QEMU_CMD+=" -cpu host,+sgx-provisionkey,+sgxlc,+sgx1"
+            QEMU_CMD+=" -object memory-backend-epc,id=mem0,size=${SGX_EPC_SIZE},prealloc=on"
+            ;;
         *)
-            error "Invalid ${VM_TYPE}, must be [legacy|efi|td]"
+            error "Invalid ${VM_TYPE}, must be [legacy|efi|td|sgx]"
             ;;
     esac
 
@@ -255,7 +263,7 @@ process_args() {
         QEMU_CMD+=",mac=${MAC_ADDR}"
     fi
 
-    # Set the network cidr, DHCP start address, and forward SSH port to the host
+    # Set the network cidr, DHCP start address, and forward SSH port to the host 
     QEMU_CMD+=" -netdev user,id=mynet0,net=$NET_CIDR,dhcpstart=$DHCP_START,hostfwd=tcp::$FORWARD_PORT-:22 "
 
     # Specify the number of CPUs

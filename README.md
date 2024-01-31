@@ -3,12 +3,13 @@
 
 ## 1. Overview
 
-The `cc-trusted-vmsdk` is a software development kit (SDK) that provides a set of tools and libraries for building an Intel TDX-compatible Confidential Virtual Machine (CVM) image from an off-the-shelf regular VM image. This SDK simplifies the process of creating secure and trusted virtual machines in a cloud computing environment, it offers developers a seamless experience in building secure and reliable applications.
+The `cc-trusted-vmsdk` is a software development kit (SDK) that provides a set of tools and libraries for building an Intel TDX-compatible Confidential Virtual Machine (CVM) image from an off-the-shelf regular VM image, and provides trusted primitives (measurement, eventlog, quote) of CVM. All below steps are supposed to run in a CVM, such as Intel® TD.
+This SDK simplifies the process of creating secure and trusted virtual machines in a cloud computing environment, it offers developers a seamless experience in building secure and reliable applications.
 
 
 ## 2. Features
 
-- Support Attestation through Integrity Measurement Architecture (IMA): Ensure the integrity of Confidential Virtual Machine (CVM) instances through robust attestation mechanisms leveraging Integrity Measurement Architecture (IMA).
+- Support Attestation through Integrity Measurement Architecture (IMA): Ensure the integrity of Confidential Virtual Machine (CVM) instances through robust attestation mechanisms leveraging Integrity Measurement Architecture (IMA). It provides trusted primitives (measurement, eventlog, quote) of CVM. All below steps are supposed to run in a CVM, such as Intel® TD.
   
 - Support `cloud-init` for seamless initial state setting for CVMs: Utilize `cloud-init` for effortless setup of initial states for Confidential Virtual Machines (CVMs), ensuring a smooth and consistent bootstrapping process.
 
@@ -23,7 +24,7 @@ The `cc-trusted-vmsdk` is a software development kit (SDK) that provides a set o
 
 ## 3. Getting Started
 
-VMSDK is supposed to provide trusted primitives (measurement, eventlog, quote) of CVM.
+VMSDK is supposed to provide VM image rewrite to CVM image, and provide trusted primitives (measurement, eventlog, quote) of CVM.
 All below steps are supposed to run in a CVM, such as Intel® TD.
 
 ### Installation

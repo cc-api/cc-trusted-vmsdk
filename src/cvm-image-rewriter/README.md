@@ -187,11 +187,14 @@ After above tool is running successfully, you can boot a VM using the generated 
 
   For example:
   ```
-  # Boot a TD
-  $ sudo ./qemu-test.sh -i output.qcow2 -t td -p <qemu monitor port> -f <ssh_forward port>
+  # Boot a TDVM with TDX 1.0 Stack
+  $ sudo ./qemu-test.sh -i output.qcow2 -t td-1.0 -p <qemu monitor port> -f <ssh_forward port>
+
+  # Boot a TDVM with TDX 1.5 Stack
+  $ sudo ./qemu-test.sh -i output.qcow2 -t td-1.5 -p <qemu monitor port> -f <ssh_forward port>
 
   # Boot a normal VM
-  $ sudo ./qemu-test.sh -i output.qcow2 -p <qemu monitor port> -f <ssh_forward port>
+  $ sudo ./qemu-test.sh -i output.qcow2 -t legacy -p <qemu monitor port> -f <ssh_forward port>
   ```
 - Boot TD using `start-virt.sh`.
 

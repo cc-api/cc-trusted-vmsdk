@@ -54,7 +54,7 @@ There are following customization plugins in Pre-Stage providing customization t
 
 ### 2.2 Design a new plugin
 
-A plugin is put into the directory of [`pre-stage`](/tools/cvm-image-rewriter/pre-stage/),
+A plugin is put into the directory of [`pre-stage`](/src/cvm-image-rewriter/pre-stage/),
 with the number as directory name's prefix. So the execution of plugin will be
 dispatched according to number sequence for example `99-test` is the final one.
 
@@ -67,7 +67,7 @@ executed before cloud-init stage
 3. cloud-init customization: please put the config yaml into `<plugin directory>/cloud-init/cloud-config`,
 and put the scripts to `<plugin directory>/cloud-init/x-shellscript`
 
-Please refer [the sample plugin](/tools/cvm-image-rewriter/pre-stage/99-test/).
+Please refer [the sample plugin](/src/cvm-image-rewriter/pre-stage/99-test/).
 
 ## 3. How to Run the tool
 

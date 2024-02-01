@@ -64,7 +64,7 @@ NET_CIDR="10.0.2.0/24"
 DHCP_START="10.0.2.15"
 
 # Just log message of serial into file without input
-HVC_CONSOLE="-chardev stdio,id=mux,mux=on,logfile=$CURR_DIR/vm_log_$(date +"%FT%H%M").log \
+HVC_CONSOLE="-chardev stdio,id=mux,mux=on,logfile=/tmp/vm_log_$(date +"%FT%H%M").log \
              -device virtio-serial,romfile= \
              -device virtconsole,chardev=mux -monitor chardev:mux \
              -serial chardev:mux -nographic"

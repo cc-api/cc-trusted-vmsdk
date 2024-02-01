@@ -37,8 +37,8 @@ else
 fi
 
 # VM configurations
-CPUS=8
-MEM=32G
+CPUS=1
+MEM=4G
 SGX_EPC_SIZE=64M
 
 # Installed from the package of intel-mvp-tdx-tdvf
@@ -47,7 +47,7 @@ GUEST_IMG=""
 DEFAULT_GUEST_IMG="${CURR_DIR}/output.qcow2"
 KERNEL=""
 DEFAULT_KERNEL="${CURR_DIR}/vmlinuz"
-VM_TYPE="td"
+VM_TYPE="td-1.0"
 BOOT_TYPE="direct"
 DEBUG=false
 USE_VSOCK=false
@@ -86,25 +86,26 @@ PARAM_MACHINE=" -machine q35"
 usage() {
     cat << EOM
 Usage: $(basename "$0") [OPTION]...
-  -i <guest image file>     Default is td-guest.qcow2 under current directory
-  -k <kernel file>          Default is vmlinuz under current directory
-  -t [legacy|efi|td|sgx]    VM Type, default is "td"
-  -b [direct|grub]          Boot type, default is "direct" which requires kernel binary specified via "-k"
-  -p <Monitor port>         Monitor via telnet
-  -f <SSH Forward port>     Host port for forwarding guest SSH
-  -o <OVMF file>            BIOS firmware device file, for "td" and "efi" VM only
-  -m <11:22:33:44:55:66>    MAC address, impact TDX measurement RTMR
-  -q [tdvmcall|vsock]       Support for TD quote using tdvmcall or vsock
-  -c <number>               Number of CPUs, default is 1
-  -r <root partition>       root partition for direct boot, default is /dev/vda1
-  -n <network CIDR>         Network CIDR for TD VM, default is "10.0.2.0/24"
-  -a <DHCP start>           Network started address, default is "10.0.2.15"
-  -e <extra kernel cmd>     Extra kernel command needed in VM boot
-  -w <sha384 hex string>    pass customiszed 48*2 bytes MROWNERCONFIG to the vm, only support td
-  -v                        Flag to enable vsock
-  -d                        Flag to enable "debug=on" for GDB guest
-  -s                        Flag to use serial console instead of HVC console
-  -h                        Show this help
+  -i <guest image file>     		Default is td-guest.qcow2 under current directory
+  -k <kernel file>          		Default is vmlinuz under current directory
+  -t [legacy|efi|td-1.0|td-1.5|sgx]     VM Type, default is "td-1.0"
+  -b [direct|grub]          		Boot type, default is "direct" which requires kernel binary specified via "-k"
+  -p <Monitor port>         		Monitor via telnet
+  -f <SSH Forward port>     		Host port for forwarding guest SSH
+  -o <OVMF file>            		BIOS firmware device file, for "td" and "efi" VM only
+  -m <11:22:33:44:55:66>    		MAC address, impact TDX measurement RTMR
+  -q [tdvmcall|vsock]       		Support for TD quote using tdvmcall or vsock
+  -c <number>               		Number of CPUs, default is 1
+  -r <root partition>       		root partition for direct boot, default is /dev/vda1
+  -n <network CIDR>         		Network CIDR for TD VM, default is "10.0.2.0/24"
+  -a <DHCP start>           		Network started address, default is "10.0.2.15"
+  -e <extra kernel cmd>     		Extra kernel command needed in VM boot
+  -w <sha384 hex string>    		pass customiszed 48*2 bytes MROWNERCONFIG to the vm, only support td
+  -u <hugepage mount path>  		mount path of hugepages  
+  -v                        		Flag to enable vsock
+  -d                        		Flag to enable "debug=on" for GDB guest
+  -s                        		Flag to use serial console instead of HVC console
+  -h                        		Show this help
 EOM
 }
 
@@ -118,7 +119,7 @@ warn() {
 }
 
 process_args() {
-    while getopts ":i:k:t:b:p:f:o:a:m:vdshq:c:r:n:s:e:w:" option; do
+    while getopts ":i:k:t:b:p:f:o:a:m:vdshq:c:r:n:s:e:w:u:" option; do
         case "$option" in
             i) GUEST_IMG=$OPTARG;;
             k) KERNEL=$OPTARG;;
@@ -137,6 +138,7 @@ process_args() {
             n) NET_CIDR=$OPTARG;;
             a) DHCP_START=$OPTARG;;
             w) MROWNERCONFIG=$OPTARG;;
+	    u) HUGEPAGE_PATH=$OPTARG;;
             e) EXTRA_KERNEL_CMD=$OPTARG;;
             h) usage
                exit 0
@@ -215,7 +217,7 @@ process_args() {
     fi
 
     case ${VM_TYPE} in
-        "td")
+        "td-1.0")
             cpu_tsc=$(grep 'cpu MHz' /proc/cpuinfo | head -1 | awk -F: '{print $2/1024}')
             if (( $(echo "$cpu_tsc < 1" |bc -l) )); then
                 PARAM_CPU+=",tsc-freq=1000000000"
@@ -234,7 +236,33 @@ process_args() {
                 QEMU_CMD+=",debug=on"
             fi
             ;;
-        "efi")
+    	"td-1.5")
+            cpu_tsc=$(grep 'cpu MHz' /proc/cpuinfo | head -1 | awk -F: '{print $2/1024}')
+            if (( $(echo "$cpu_tsc < 1" |bc -l) )); then
+                PARAM_CPU+=",tsc-freq=1000000000"
+            fi
+            # Note: "pic=no" could only be used in TD mode but not for non-TD mode
+            PARAM_MACHINE+=",kernel_irqchip=split,confidential-guest-support=tdx,memory-backend=ram1"
+            QEMU_CMD+=" -bios ${OVMF}"
+            QEMU_CMD+=" -object tdx-guest,sept-ve-disable=on,id=tdx"
+            if [[ ${QUOTE_TYPE} == "tdvmcall" ]]; then
+                QEMU_CMD+=",quote-generation-service=vsock:2:4050"
+            fi
+            if [[ -n ${MROWNERCONFIG} ]]; then
+                QEMU_CMD+=",mrownerconfig=${MROWNERCONFIG}"
+            fi
+            if [[ ${DEBUG} == true ]]; then
+                QEMU_CMD+=",debug=on"
+            fi
+            # When user specify a hugepage path, it will set hugetlb=on and use the user-defined path.
+            if [[ ${HUGEPAGE_PATH} == "" ]]; then
+                QEMU_CMD+=" -object memory-backend-memfd-private,id=ram1,size=${MEM}"
+            else
+                QEMU_CMD+=" -object memory-backend-memfd,id=ramhuge,size=${MEM},hugetlb=on,hugetlbsize=2M"
+                QEMU_CMD+=" -object memory-backend-memfd-private,id=ram1,size=${MEM},path=${HUGEPAGE_PATH},shmemdev=ramhuge"
+            fi
+            ;;
+    	"efi")
             PARAM_MACHINE+=",kernel_irqchip=split"
             QEMU_CMD+=" -bios ${OVMF}"
             ;;
@@ -289,7 +317,7 @@ process_args() {
             fi
 
             QEMU_CMD+=" -kernel $(readlink -f "${KERNEL}") "
-            if [[ ${VM_TYPE} == "td" ]]; then
+            if [[ ${VM_TYPE} == "td-1.0" ]]; then
                 # shellcheck disable=SC2089
                 QEMU_CMD+=" -append \"${KERNEL_CMD_TD}\" "
             else

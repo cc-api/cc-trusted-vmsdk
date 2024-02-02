@@ -278,7 +278,7 @@ process_args() {
             QEMU_CMD+=" -object memory-backend-epc,id=mem0,size=${SGX_EPC_SIZE},prealloc=on"
             ;;
         *)
-            error "Invalid ${VM_TYPE}, must be [legacy|efi|td|sgx]"
+            error "Invalid ${VM_TYPE}, must be [legacy|efi|td-1.0|td-1.5|sgx]"
             ;;
     esac
 

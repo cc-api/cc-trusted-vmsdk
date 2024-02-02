@@ -175,7 +175,7 @@ $ ./run.sh -i <initial guest image> -t 10
 
 ### 3.3 Boot a VM
 
-After above tool is running successfully, you can boot a VM using the generated `output.qcow2` using `qemu-test.sh` or `start-virt.sh`.
+After above tool is running successfully, you can boot a VM using the generated `output.qcow2` using `qemu-test.sh` or `virt-test.sh`.
 
 - Boot TD or normal VM using `qemu-test.sh`.
   ```
@@ -196,11 +196,11 @@ After above tool is running successfully, you can boot a VM using the generated 
   # Boot a normal VM
   $ sudo ./qemu-test.sh -i output.qcow2 -t legacy -p <qemu monitor port> -f <ssh_forward port>
   ```
-- Boot TD using `start-virt.sh`.
+- Boot TD using `virt-test.sh`.
 
   ```
-  $ sudo ./start-virt.sh -h
-  Usage: start-virt.sh [OPTION]...
+  $ sudo ./virt-test.sh -h
+  Usage: virt-test.sh [OPTION]...
     -i <guest image file>     Default is tdx-guest-ubuntu22.04.qcow2 under current directory
     -n <guest name>           Name of TD guest
     -t <template file>        Default is ./tdx-libvirt-ubuntu-host.xml.template

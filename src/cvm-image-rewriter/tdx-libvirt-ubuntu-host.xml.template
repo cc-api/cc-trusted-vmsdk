@@ -2,12 +2,14 @@
   <name>tdx-guest</name>
   <memory unit='GiB'>REPLACE_MEM_SIZE</memory>
   <memoryBacking>
-    <source type='memfd-private'/>
+    <source type='memfd'/>
   </memoryBacking>
   <vcpu placement="static">REPLACE_VCPU_NUM</vcpu>
   <os>
     <type arch='x86_64' machine='q35'>hvm</type>
-    <loader>/usr/share/qemu/OVMF.fd</loader>
+    <loader type='rom'>REPLACE_OVMF_CODE</loader>
+    <kernel>REPLACE_KERNEL</kernel>
+    <cmdline>rw selinux=0 console=hvc0 earlyprintk console=tty0 root=/dev/vda1</cmdline>
     <boot dev='hd'/>
   </os>
   <features>
@@ -31,24 +33,26 @@
   <devices>
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
     <disk type='file' device='disk'>
-      <driver name='qemu' type='qcow2'/>
-      <source file='/path/to/image'/>
+      <driver name='qemu' type='qcow2' cache='none' io='native' iothread='2'/>
+      <source file='REPLACE_IMAGE' index='1'/>
       <target dev='vda' bus='virtio'/>
     </disk>
-    <interface type="user">
-      <model type="virtio"/>
-    </interface>
     <console type='pty'>
+      <log file='REPLACE_LOG'/>
       <target type='virtio' port='0'/>
     </console>
+    <interface type='bridge'>
+      <source bridge='virbr0'/>
+      <model type='virtio'/>
+    </interface>
+    <interface type="user">
+      <model type="virtio"/>
+      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
+    </interface>
     <channel type='unix'>
       <source mode='bind'/>
       <target type='virtio' name='org.qemu.guest_agent.0'/>
     </channel>
-    <vsock model='virtio'>
-      <cid auto='yes' address='3'/>
-      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>
-    </vsock>
   </devices>
   <allowReboot value='no'/>
   <launchSecurity type='tdx'>
@@ -56,6 +60,6 @@
   </launchSecurity>
   <qemu:commandline>
     <qemu:arg value='-cpu'/>
-    <qemu:arg value='host,-kvm-steal-time'/>
+    <qemu:arg value='host,-shstk,-kvm-steal-time,pmu=off'/>
   </qemu:commandline>
 </domain>

@@ -158,10 +158,10 @@ start-vm() {
     virsh define "${GUEST_ROOTDIR}/${GUEST_NAME}.xml"
     sleep 2
     echo "> Start VM..."
-    virsh start "${GUEST_NAME}"
+    sudo virsh start "${GUEST_NAME}"
     sleep 2
     echo "> Connect console..."
-    virsh console "${GUEST_NAME}"
+    sudo virsh console "${GUEST_NAME}"
 }
 
 pre-check

@@ -1,3 +1,6 @@
+[![VMSDK Python Test](https://github.com/intelzhongjie/cc-trusted-vmsdk/actions/workflows/vmsdk-test-python.yaml/badge.svg)](https://github.com/intelzhongjie/cc-trusted-vmsdk/actions/workflows/vmsdk-test-python.yaml)
+[![VMSDK Rust Test](https://github.com/intelzhongjie/cc-trusted-vmsdk/actions/workflows/vmsdk-test-rust.yml/badge.svg)](https://github.com/intelzhongjie/cc-trusted-vmsdk/actions/workflows/vmsdk-test-rust.yml)
+
 # cc-trusted-vmsdk
 
 

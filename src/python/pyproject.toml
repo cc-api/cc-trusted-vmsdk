@@ -15,7 +15,7 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
 ]
 dependencies = [
-  "cctrusted_base",
+  "cctrusted_base @ git+https://github.com/cc-api/cc-trusted-api.git#subdirectory=common/python",
   "pytest",
 ]
 

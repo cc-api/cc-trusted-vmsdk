@@ -1,0 +1,30 @@
+name: VMSDK Python Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/python/**/*'
+  pull_request:
+    paths:
+      - 'src/python/**/*'
+  workflow_dispatch:
+
+jobs:
+  vmsdk_pytest:
+    runs-on: [self-hosted, tdx-guest]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run PyTest for VMSDK
+        run: |
+          set -ex
+          # Set the "PYTHONDONTWRITEBYTECODE" and "no:cacheprovider" to prevent
+          # generated some intermediate files by root. Othwerwise, these
+          # files will fail the action/checkout in the next round of running
+          # due to the permission issue.
+          sudo su -c "source setupenv.sh && \
+                      pushd src/python/tests && \
+                      export PYTHONDONTWRITEBYTECODE=1 && \
+                      python3 -m pytest -p no:cacheprovider -v test_sdk.py && \
+                      popd"

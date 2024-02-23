@@ -12,7 +12,7 @@ name = "cctrusted_vm"
 path = "src/lib.rs"
 
 [dependencies]
-cctrusted_base = { path = "../../../common/rust/cctrusted_base" }
+cctrusted_base = { git = "https://github.com/cc-api/cc-trusted-api.git", branch = "main" }
 anyhow = "1.0"
 log = "0.4.20"
 nix = "0.26.2"

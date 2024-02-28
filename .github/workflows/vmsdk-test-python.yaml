@@ -6,16 +6,27 @@ on:
       - main
     paths:
       - 'src/python/**/*'
+      - '.github/workflows/vmsdk-test-python.yaml'
   pull_request:
     paths:
       - 'src/python/**/*'
+      - '.github/workflows/vmsdk-test-python.yaml'
   workflow_dispatch:
+
+env:
+  VMSDK_PYTEST_DIR: 'vmsdk_pytest'
 
 jobs:
   vmsdk_pytest:
     runs-on: [self-hosted, tdx-guest]
+    defaults:
+      run:
+        working-directory: ${{env.VMSDK_PYTEST_DIR}}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          path: ${{env.VMSDK_PYTEST_DIR}}
       - name: Run PyTest for VMSDK
         run: |
           set -ex

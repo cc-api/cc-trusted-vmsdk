@@ -12,6 +12,7 @@ import os
 import logging
 import struct
 import fcntl
+import socket
 from abc import abstractmethod
 from cctrusted_base.api import CCTrustedApi
 from cctrusted_base.imr import TcgIMR
@@ -19,7 +20,7 @@ from cctrusted_base.ccreport import CcReport
 from cctrusted_base.tcg import TcgAlgorithmRegistry
 from cctrusted_base.tdx.common import TDX_VERSION_1_0, TDX_VERSION_1_5
 from cctrusted_base.tdx.rtmr import TdxRTMR
-from cctrusted_base.tdx.quote import TdxQuoteReq10, TdxQuoteReq15
+from cctrusted_base.tdx.quote import TdxQuoteReq10, TdxQuoteReq15, TdxQuote
 from cctrusted_base.tdx.report import TdxReportReq10, TdxReportReq15
 
 LOG = logging.getLogger(__name__)
@@ -216,6 +217,7 @@ class TdxVM(ConfidentialVM):
     ACPI_TABLE_FILE = "/sys/firmware/acpi/tables/CCEL"
     ACPI_TABLE_DATA_FILE = "/sys/firmware/acpi/tables/data/CCEL"
     IMA_DATA_FILE = "/sys/kernel/security/integrity/ima/ascii_runtime_measurements"
+    CFG_FILE_PATH = "/etc/tdx-attest.conf"
 
     def __init__(self):
         ConfidentialVM.__init__(self, CCTrustedApi.TYPE_CC_TDX)
@@ -391,6 +393,69 @@ class TdxVM(ConfidentialVM):
         self.process_cc_report(input_data)
         report_bytes = self.tdreport.data
 
+        if self.version is TDX_VERSION_1_0:
+            quote_req = TdxQuoteReq10()
+        elif self.version is TDX_VERSION_1_5:
+            quote_req = TdxQuoteReq15()
+
+        # Use tdvmcall to get TD Quote by default
+        tdvmcall_flag = True
+
+        # Check if vsock port specified in TDX attest config
+        # If specified, use vsock to get quote
+        if os.path.exists(TdxVM.CFG_FILE_PATH):
+            LOG.info("Found TDX Config file at %s", TdxVM.CFG_FILE_PATH)
+            try:
+                with open(TdxVM.CFG_FILE_PATH, 'rb') as cfg_file:
+                    cfg_info = [line.rstrip() for line in cfg_file]
+                    for line in cfg_info:
+                        line = line.decode("utf-8").replace(" ", "")
+                        if "port=" in line:
+                            LOG.info("Vsock port number specified. Use vsock for quote fetching.")
+                            tdvmcall_flag = False
+                            port = int(line.partition("port=")[2])
+                            if port <= 0 or port > 65535:
+                                LOG.error(
+                                    "Invalid vsock port number specified. Fallback to tdvmcall.")
+                                tdvmcall_flag = True
+                            break
+            except(PermissionError, OSError):
+                LOG.error("Need root permission to open file %s", TdxVM.CFG_FILE_PATH)
+
+        if not tdvmcall_flag:
+            # Setup socket to connect qgs socket on host
+            with socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM, 0) as sock:
+                sock.settimeout(30)
+                sock.connect((socket.VMADDR_CID_HOST, port))
+
+                header_size = 4
+                # Generate p_blob_payload buffer
+                qgs_msg = quote_req.qgs_msg_quote_req(report_bytes)
+                msg_size = len(qgs_msg)
+
+                p_blob_payload = bytearray(msg_size.to_bytes(header_size, "big"))
+                p_blob_payload[header_size:] = qgs_msg[:msg_size]
+
+                # Send quote request
+                nsent = sock.send(p_blob_payload)
+                LOG.debug("Sent %d bytes for Quote request.", nsent)
+
+                # Receive quote
+                header = sock.recv(header_size)
+                in_msg_size = 0
+                for i in range(header_size):
+                    in_msg_size = (in_msg_size << 8) + (header[i] & 0xFF)
+                qgs_resp = sock.recv(in_msg_size)
+                LOG.debug("Received %d bytes as Quote response", in_msg_size)
+
+                sock.close()
+            tdquote = quote_req.qgs_msg_quote_resp(qgs_resp)
+            return TdxQuote(tdquote)
+
+        # Fetch quote through tdvmcall
+        # pylint: disable=E1111
+        req_buf = quote_req.prepare_reqbuf(report_bytes)
+
         # Open TDX guest device node
         dev_path = self.DEVICE_NODE_PATH[self.version]
         try:
@@ -401,12 +466,6 @@ class TdxVM(ConfidentialVM):
         LOG.debug("Successful open device node %s", dev_path)
 
         # Run ioctl command to get TD Quote
-        if self.version is TDX_VERSION_1_0:
-            quote_req = TdxQuoteReq10()
-        elif self.version is TDX_VERSION_1_5:
-            quote_req = TdxQuoteReq15()
-        # pylint: disable=E1111
-        req_buf = quote_req.prepare_reqbuf(report_bytes)
         try:
             fcntl.ioctl(tdx_dev, self.IOCTL_GET_QUOTE[self.version], req_buf)
         except OSError as e:

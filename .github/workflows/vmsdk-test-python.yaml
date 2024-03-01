@@ -23,6 +23,13 @@ jobs:
       run:
         working-directory: ${{env.VMSDK_PYTEST_DIR}}
     steps:
+      - name: Clean up intermediate files
+        continue-on-error: true
+        run: |
+          # Remove the intermediate files that could be left
+          # by previous run with sudo. Otherwise, the checkout
+          # will fail with permission issue.
+          sudo rm -fr ./*
       - name: Checkout repo
         uses: actions/checkout@v4
         with:

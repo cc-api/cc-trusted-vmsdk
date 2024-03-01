@@ -6,10 +6,12 @@ on:
       - main
     paths:
       - 'src/python/**/*'
+      - 'setupenv.sh'
       - '.github/workflows/vmsdk-test-python.yaml'
   pull_request:
     paths:
       - 'src/python/**/*'
+      - 'setupenv.sh'
       - '.github/workflows/vmsdk-test-python.yaml'
   workflow_dispatch:
 

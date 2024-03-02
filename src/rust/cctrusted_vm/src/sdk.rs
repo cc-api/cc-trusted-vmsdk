@@ -21,7 +21,7 @@ impl CCTrustedApi for API {
         match build_cvm() {
             Ok(mut cvm) => {
                 // call CVM trait defined methods
-                cvm.dump();
+                // cvm.dump();
                 Ok(CcReport {
                     cc_report: match cvm.process_cc_report(nonce, data) {
                         Ok(r) => r,

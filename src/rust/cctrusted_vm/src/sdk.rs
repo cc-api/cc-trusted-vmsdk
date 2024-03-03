@@ -109,6 +109,17 @@ mod sdk_api_tests {
     use cctrusted_base::tdx::quote::TdxQuote;
     use rand::Rng;
 
+    fn _check_imr(imr_index: u8, algo: u16, digest: &Vec<u8>) {
+        let tcg_digest = match API::get_cc_measurement(imr_index, algo) {
+            Ok(tcg_digest) => tcg_digest,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        assert_eq!(digest, &tcg_digest.hash);
+    }
+
     // test on cc trusted API [get_cc_report]
     #[test]
     fn test_get_cc_report() {
@@ -317,6 +328,36 @@ mod sdk_api_tests {
                     }
                 };
             }
+        }
+    }
+
+    #[test]
+    fn test_get_cc_measurement_with_invalid_index() {
+        let count = match API::get_measurement_count() {
+            Ok(count) => count,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        let invalid_index = count + 1;
+
+        let defalt_algo = match API::get_default_algorithm() {
+            Ok(algorithm) => algorithm,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+
+        if get_cvm_type().tee_type == TeeType::TDX {
+            match API::get_cc_measurement(invalid_index, defalt_algo.algo_id) {
+                Ok(tcg_digest) => tcg_digest,
+                Err(e) => {
+                    assert_eq!(true, format!("{:?}", e).contains("invalid RTMR index"));
+                    return;
+                }
+            };
         }
     }
 
@@ -550,5 +591,83 @@ mod sdk_api_tests {
                 EventLogEntry::TcgCanonicalEvent(_) => todo!(),
             }
         }
+    }
+
+    #[test]
+    fn test_replay_cc_eventlog_with_valid_input() {
+        let measure_count = match API::get_measurement_count() {
+            Ok(measure_count) => measure_count,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        let event_logs = match API::get_cc_eventlog(None, None) {
+            Ok(l) => l,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        assert_ne!(event_logs.len(), 0);
+        let replay_results = match API::replay_cc_eventlog(event_logs) {
+            Ok(r) => r,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        assert_ne!(replay_results.len(), 0);
+        for r in replay_results {
+            for digest in &r.digests {
+                assert!(r.imr_index < measure_count.into(), "{} out of range!", r.imr_index);
+                _check_imr(r.imr_index.try_into().unwrap(), digest.algo_id, &digest.hash)
+            }
+        }
+    }
+
+    #[test]
+    fn test_replay_cc_eventlog_with_invalid_input() {
+        let mut event_logs = match API::get_cc_eventlog(None, None) {
+            Ok(l) => l,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        assert_ne!(event_logs.len(), 0);
+
+        // Generate an invalid event log by tampering with a valid log:
+        // Randomly choose one entry and set an invalid imr_index for it.
+        let mut rng = rand::thread_rng();
+        let entry_idx: usize = rng.gen_range(0..event_logs.len());
+        let measure_count = match API::get_measurement_count() {
+            Ok(measure_count) => measure_count,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        let invalid_imr_index: u32 = rng.gen_range(measure_count..std::u8::MAX).into();
+        let log_entry: &mut EventLogEntry = &mut event_logs[entry_idx];
+        match log_entry {
+            EventLogEntry::TcgImrEvent(ref mut tcg_imr_event) => {
+                tcg_imr_event.imr_index = invalid_imr_index;
+            }
+            EventLogEntry::TcgPcClientImrEvent(ref mut tcg_pc_client_imr_event) => {
+                tcg_pc_client_imr_event.imr_index = invalid_imr_index;
+            }
+            EventLogEntry::TcgCanonicalEvent(_) => todo!(),
+        }
+
+        // Test with the invalid event log.
+        let replay_results = match API::replay_cc_eventlog(event_logs) {
+            Ok(r) => r,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        assert!(replay_results.len() == 0, "Invalid event log should not be replayed!");
     }
 }

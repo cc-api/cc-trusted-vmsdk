@@ -120,13 +120,71 @@ mod sdk_api_tests {
         assert_eq!(digest, &tcg_digest.hash);
     }
 
+    fn _replay_eventlog() -> Vec<ReplayResult> {
+        let empty_results = Vec::with_capacity(0);
+        let event_logs = match API::get_cc_eventlog(None, None) {
+            Ok(l) => l,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return empty_results;
+            }
+        };
+        assert_ne!(event_logs.len(), 0);
+        let replay_results = match API::replay_cc_eventlog(event_logs) {
+            Ok(r) => r,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return empty_results;
+            }
+        };
+        assert_ne!(replay_results.len(), 0);
+        return replay_results;
+    }
+
+    fn _check_quote_rtmr(quote: & TdxQuote) {
+        let replay_results = _replay_eventlog();
+        let rtmrs: [[u8; 48]; 4] = [
+            quote.body.rtmr0,
+            quote.body.rtmr1,
+            quote.body.rtmr2,
+            quote.body.rtmr3
+        ];
+        for r in replay_results {
+            for digest in &r.digests {
+                let idx = usize::try_from(r.imr_index).unwrap();
+                let rtmr = Vec::from(rtmrs[idx]);
+                assert_eq!(&rtmr, &digest.hash);
+            }
+        }
+    }
+
+    fn _check_report_rtmr(report: CcReport, expected_report_data: String) {
+        assert_ne!(report.cc_report.len(), 0);
+        let expected_cvm_type = get_cvm_type().tee_type;
+        assert_eq!(report.cc_type, expected_cvm_type);
+        if report.cc_type == TeeType::TDX {
+            let tdx_quote: TdxQuote = match CcReport::parse_cc_report(report.cc_report) {
+                Ok(q) => q,
+                Err(e) => {
+                    assert_eq!(true, format!("{:?}", e).is_empty());
+                    return;
+                }
+            };
+            assert_eq!(
+                base64::encode(&tdx_quote.body.report_data),
+                expected_report_data
+            );
+            _check_quote_rtmr(&tdx_quote);
+        }
+    }
+
     // test on cc trusted API [get_cc_report]
     #[test]
     fn test_get_cc_report() {
         let nonce = base64::encode(rand::thread_rng().gen::<[u8; 32]>());
         let data = base64::encode(rand::thread_rng().gen::<[u8; 32]>());
 
-        match Tdx::generate_tdx_report_data(Some(nonce.clone()), Some(data.clone())) {
+        let expected_report_data = match Tdx::generate_tdx_report_data(Some(nonce.clone()), Some(data.clone())) {
             Ok(r) => r,
             Err(e) => {
                 assert_eq!(true, format!("{:?}", e).is_empty());
@@ -143,10 +201,30 @@ mod sdk_api_tests {
             }
         };
 
-        assert_ne!(report.cc_report.len(), 0);
+        _check_report_rtmr(report, expected_report_data);
+    }
 
-        let expected_cvm_type = get_cvm_type().tee_type;
-        assert_eq!(report.cc_type, expected_cvm_type);
+    #[test]
+    fn test_get_cc_report_without_nonce() {
+        let data = base64::encode(rand::thread_rng().gen::<[u8; 32]>());
+
+        let expected_report_data = match Tdx::generate_tdx_report_data(None, Some(data.clone())) {
+            Ok(r) => r,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+
+        let report = match API::get_cc_report(None, Some(data.clone()), ExtraArgs {}) {
+            Ok(q) => q,
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+
+        _check_report_rtmr(report, expected_report_data);
     }
 
     #[test]
@@ -169,20 +247,7 @@ mod sdk_api_tests {
             }
         };
 
-        if report.cc_type == TeeType::TDX {
-            let tdx_quote: TdxQuote = match CcReport::parse_cc_report(report.cc_report) {
-                Ok(q) => q,
-                Err(e) => {
-                    assert_eq!(true, format!("{:?}", e).is_empty());
-                    return;
-                }
-            };
-
-            assert_eq!(
-                base64::encode(&tdx_quote.body.report_data),
-                expected_report_data
-            );
-        }
+        _check_report_rtmr(report, expected_report_data);
     }
 
     #[test]
@@ -203,20 +268,7 @@ mod sdk_api_tests {
             }
         };
 
-        if report.cc_type == TeeType::TDX {
-            let tdx_quote: TdxQuote = match CcReport::parse_cc_report(report.cc_report) {
-                Ok(q) => q,
-                Err(e) => {
-                    assert_eq!(true, format!("{:?}", e).is_empty());
-                    return;
-                }
-            };
-
-            assert_eq!(
-                base64::encode(&tdx_quote.body.report_data),
-                expected_report_data
-            );
-        }
+        _check_report_rtmr(report, expected_report_data);
     }
 
     #[test]

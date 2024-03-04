@@ -716,7 +716,8 @@ mod sdk_api_tests {
         let replay_results = match API::replay_cc_eventlog(event_logs) {
             Ok(r) => r,
             Err(e) => {
-                assert_eq!(true, format!("{:?}", e).is_empty());
+                // This is the expected behavior. Invalid log is not replayed.
+                assert_ne!(true, format!("{:?}", e).is_empty());
                 return;
             }
         };

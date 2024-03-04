@@ -120,9 +120,9 @@ class ConfidentialVM:
 
     @abstractmethod
     def get_cc_report(self, nonce: bytearray, data: bytearray, extraArgs) -> CcReport:
-        """Get the quote for given nonce and data.
+        """Get the CcReport (i.e. quote) for given nonce and data.
 
-        The quote is signing of attestation data (IMR values or hashes of IMR
+        The CcReport is signing of attestation data (IMR values or hashes of IMR
         values), made by a trusted foundation (TPM) using a key trusted by the
         verifier.
 
@@ -134,7 +134,7 @@ class ConfidentialVM:
             extraArgs: for TPM, it will be given list of IMR/PCRs
 
         Returns:
-            The ``Quote`` object.
+            The ``CcReport`` object.
         """
         raise NotImplementedError("Should be implemented by inherited class")
 
@@ -379,7 +379,7 @@ class TdxVM(ConfidentialVM):
 
 
     def get_cc_report(self, nonce: bytearray, data: bytearray, extraArgs) -> CcReport:
-        """Get quote.
+        """Get CcReport (i.e. TD Quote in the context of TDX).
 
         This depends on Quote Generation Service. Please reference "Whitepaper:
         Linux* Stacks for Intel® Trust Domain Extensions (4.3 Attestation)" for
@@ -396,7 +396,7 @@ class TdxVM(ConfidentialVM):
         extraArgs: for TPM, it will be given list of IMR/PCRs
 
         Returns:
-            The ``Quote`` object.
+            The ``CcReport`` object. Return None if it fails.
 
         Raises:
             binascii.Error when the parameter "nonce" or "data" is not base64 encoded.

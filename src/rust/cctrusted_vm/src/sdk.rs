@@ -548,6 +548,46 @@ mod sdk_api_tests {
     }
 
     #[test]
+    fn test_get_cc_eventlog_invalid_start() {
+        let number_of_eventlogs = match API::get_cc_eventlog(None, None) {
+            Ok(q) => q.len(),
+            Err(e) => {
+                assert_eq!(true, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        let mut invalid_start = Some((number_of_eventlogs).try_into().unwrap());
+        let mut event_log = match API::get_cc_eventlog(invalid_start, None) {
+            Ok(q) => q,
+            Err(e) => {
+                assert_eq!(false, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        assert!(
+            event_log.len() == 0,
+            "Start {} is out of range but not handled properly!",
+            invalid_start.unwrap()
+        );
+        let mut rng = rand::thread_rng();
+        let idx_max = usize::try_from(std::u32::MAX).unwrap();
+        let idx: u32 = rng.gen_range(number_of_eventlogs + 1..idx_max).try_into().unwrap();
+        invalid_start = Some(idx);
+        event_log = match API::get_cc_eventlog(invalid_start, None) {
+            Ok(q) => q,
+            Err(e) => {
+                assert_eq!(false, format!("{:?}", e).is_empty());
+                return;
+            }
+        };
+        assert!(
+            event_log.len() == 0,
+            "Start {} is out of range but not handled properly!",
+            invalid_start.unwrap()
+        );
+    }
+
+    #[test]
     fn test_get_cc_eventlog_invalid_count() {
         match API::get_cc_eventlog(Some(1), Some(0)) {
             Ok(q) => q,

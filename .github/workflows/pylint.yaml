@@ -1,0 +1,37 @@
+name: Python Code Scan
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - 'src/**/*.py'
+  pull_request:
+    paths:
+    - 'src/**/*.py'
+  workflow_dispatch:
+
+jobs:
+  codescan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+
+      - name: Analyze python code
+        run: |
+          set -ex
+          sudo su -c 'source setupenv.sh && \
+            python3 -m pip install --upgrade pip && \
+            python3 -m pip install pylint pydocstyle && \
+            for f in $(find -type f -name "requirements.txt" -not -path "./venv/*"); do
+              python3 -m pip install -r $f;
+            done && \
+            python_files=$(find ./ -name "*.py" -not -path "./venv/*" -print) && \
+            if [[ -n "$python_files" ]]; then
+              echo "$python_files" | xargs -n 1 python3 -m pylint --rcfile=.github/pylintrc
+            #echo "$python_files" | xargs -n 1 python3 -m pydocstyle --convention=google
+            else
+              echo "No python files found."
+            fi'

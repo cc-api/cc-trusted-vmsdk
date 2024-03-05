@@ -19,7 +19,7 @@ cargo run --bin cc-sample-eventlog
 cargo run --bin cc-sample-quote
 ```
 
-Or, after build successfuly, we can also run the CLIs directly:
+Or, after build successfully, we can also run the CLIs directly:
 
 ```bash
 cd sample

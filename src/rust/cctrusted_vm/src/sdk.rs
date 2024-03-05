@@ -141,13 +141,13 @@ mod sdk_api_tests {
         return replay_results;
     }
 
-    fn _check_quote_rtmr(quote: & TdxQuote) {
+    fn _check_quote_rtmr(quote: &TdxQuote) {
         let replay_results = _replay_eventlog();
         let rtmrs: [[u8; 48]; 4] = [
             quote.body.rtmr0,
             quote.body.rtmr1,
             quote.body.rtmr2,
-            quote.body.rtmr3
+            quote.body.rtmr3,
         ];
         for r in replay_results {
             for digest in &r.digests {
@@ -184,13 +184,14 @@ mod sdk_api_tests {
         let nonce = base64::encode(rand::thread_rng().gen::<[u8; 32]>());
         let data = base64::encode(rand::thread_rng().gen::<[u8; 32]>());
 
-        let expected_report_data = match Tdx::generate_tdx_report_data(Some(nonce.clone()), Some(data.clone())) {
-            Ok(r) => r,
-            Err(e) => {
-                assert_eq!(true, format!("{:?}", e).is_empty());
-                return;
-            }
-        };
+        let expected_report_data =
+            match Tdx::generate_tdx_report_data(Some(nonce.clone()), Some(data.clone())) {
+                Ok(r) => r,
+                Err(e) => {
+                    assert_eq!(true, format!("{:?}", e).is_empty());
+                    return;
+                }
+            };
 
         let report = match API::get_cc_report(Some(nonce.clone()), Some(data.clone()), ExtraArgs {})
         {
@@ -571,7 +572,10 @@ mod sdk_api_tests {
         );
         let mut rng = rand::thread_rng();
         let idx_max = usize::try_from(std::u32::MAX).unwrap();
-        let idx: u32 = rng.gen_range(number_of_eventlogs + 1..idx_max).try_into().unwrap();
+        let idx: u32 = rng
+            .gen_range(number_of_eventlogs + 1..idx_max)
+            .try_into()
+            .unwrap();
         invalid_start = Some(idx);
         event_log = match API::get_cc_eventlog(invalid_start, None) {
             Ok(q) => q,
@@ -712,8 +716,16 @@ mod sdk_api_tests {
         assert_ne!(replay_results.len(), 0);
         for r in replay_results {
             for digest in &r.digests {
-                assert!(r.imr_index < measure_count.into(), "{} out of range!", r.imr_index);
-                _check_imr(r.imr_index.try_into().unwrap(), digest.algo_id, &digest.hash)
+                assert!(
+                    r.imr_index < measure_count.into(),
+                    "{} out of range!",
+                    r.imr_index
+                );
+                _check_imr(
+                    r.imr_index.try_into().unwrap(),
+                    digest.algo_id,
+                    &digest.hash,
+                )
             }
         }
     }
@@ -761,6 +773,9 @@ mod sdk_api_tests {
                 return;
             }
         };
-        assert!(replay_results.len() == 0, "Invalid event log should not be replayed!");
+        assert!(
+            replay_results.len() == 0,
+            "Invalid event log should not be replayed!"
+        );
     }
 }

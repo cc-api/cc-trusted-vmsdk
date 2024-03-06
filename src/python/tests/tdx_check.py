@@ -8,7 +8,7 @@ import random
 import pytest
 from cctrusted_base.api import CCTrustedApi
 from cctrusted_base.eventlog import EventLogs
-from cctrusted_base.tcg import TcgAlgorithmRegistry, TcgEventType
+from cctrusted_base.tcg import TcgAlgorithmRegistry
 from cctrusted_base.tdx.common import TDX_REPORTDATA_LEN
 from cctrusted_base.tdx.quote import TdxQuote, TdxQuoteBody
 from cctrusted_base.tdx.rtmr import TdxRTMR
@@ -56,8 +56,8 @@ def tdx_check_measurement_imrs():
     """
     alg = CCTrustedVmSdk.inst().get_default_algorithms()
     rtmrs = _replay_eventlog()
-    for imr_idx, _ in rtmrs.items():
-        _check_imr(imr_idx, alg.alg_id, rtmrs[imr_idx][alg.alg_id])
+    for imr_idx, digests in rtmrs.items():
+        _check_imr(imr_idx, alg.alg_id, digests[alg.alg_id])
 
 def _gen_valid_nonce():
     """Generate nonce for test.
@@ -123,19 +123,14 @@ def _check_quote_rtmrs(quote):
     assert quote is not None and isinstance(quote, TdxQuote)
     body = quote.body
     assert body is not None and isinstance(body, TdxQuoteBody)
+    quote_rtmrs = [body.rtmr0, body.rtmr1, body.rtmr2, body.rtmr3]
     rtmrs = _replay_eventlog()
     alg = CCTrustedVmSdk.inst().get_default_algorithms()
-    # Replay result only contains the RTMR values covered by the event logs
-    # Need to fill back the RTMRs that are not covered by the event logs
-    for idx in range(TdxRTMR.RTMR_COUNT):
-        if idx not in rtmrs.keys():
-            rtmrs[idx] = {}
-            rtmrs[idx][alg.alg_id] = bytearray(TdxRTMR.RTMR_LENGTH_BY_BYTES)
-    # Compare all the RTMR values
-    assert body.rtmr0 == rtmrs[0][alg.alg_id], "RTMR0 doesn't equal the replay from event log!"
-    assert body.rtmr1 == rtmrs[1][alg.alg_id], "RTMR1 doesn't equal the replay from event log!"
-    assert body.rtmr2 == rtmrs[2][alg.alg_id], "RTMR2 doesn't equal the replay from event log!"
-    assert body.rtmr3 == rtmrs[3][alg.alg_id], "RTMR3 doesn't equal the replay from event log!"
+    # Compare all the RTMR values which are used by the event log.
+    # Please note that some RTMR may not be used.
+    for imr_idx, digests in rtmrs.items():
+        assert quote_rtmrs[imr_idx] == digests[alg.alg_id], \
+            f"RTMR{imr_idx} doesn't equal the replay from event log!"
 
 def _check_quote_reportdata(quote, nonce=None, userdata=None):
     """Check the userdata in quote result."""

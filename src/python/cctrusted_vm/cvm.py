@@ -268,7 +268,7 @@ class TdxVM(ConfidentialVM):
                     LOG.debug("Invalid vsock port specified in the config.")
                     del tdx_config_dict["port"]
 
-            return tdx_config_dict
+        return tdx_config_dict
 
     def process_cc_report(self, report_data=None) -> bool:
         """Process the confidential computing REPORT."""

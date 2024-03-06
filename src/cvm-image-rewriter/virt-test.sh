@@ -19,10 +19,8 @@ FORCE=false
 VCPU_NUM=1
 MEM_SIZE=4
 
-# TDX 1.5 socket
-TDX_SOCKET_NEW="/var/local/run/libvirt/virtqemud-sock"
-# TDX 1.0 socket
-TDX_SOCKET_OLD="/var/local/run/libvirt/libvirt-sock"
+# TDX socket
+TDX_SOCKET="/var/local/run/libvirt/libvirt-sock"
 
 # log file 
 LOG="/tmp/vm_log_$(date +"%FT%H%M").log"
@@ -49,12 +47,10 @@ pre-check() {
     fi
 
     # Check if the socket file exists
-    if [ ! -e "$TDX_SOCKET_NEW" ]; then
-	    echo "Socket file does not exists: $TDX_SOCKET_NEW"
-	    #ln -s "$TDX_SOCKET_OLD" "$TDX_SOCKET_NEW"
-	    #echo "Symbolic link created: $TDX_SOCKET_OLD -> $TDX_SOCKET_NEW"
+    if [ ! -e "$TDX_SOCKET" ]; then
+	    echo "Socket file does not exists: $TDX_SOCKET"
     else
-	    echo "Socket file already exists: $TDX_SOCKET_NEW"
+	    echo "Socket file exists: $TDX_SOCKET"
     fi
 
     # Check whether current user belong to libvirt

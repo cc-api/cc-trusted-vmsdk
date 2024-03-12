@@ -280,7 +280,7 @@ do_cloud_init() {
         --connect ${CONNECT_URI} \
         --disk /tmp/ciiso.iso,device=cdrom \
         --os-type Linux \
-        --os-variant ubuntu18.10 \
+        --os-variant ubuntu22.04 \
         --graphics none \
         --import \
         --wait=$TIMEOUT \

@@ -1,5 +1,9 @@
 github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base v0.0.0-20240301030154-2eb19c45f9a9 h1:RcjMAyyLLFmhr0jVXNGzOD+f7/Zpx4KoZR6CmPfRlV0=
 github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base v0.0.0-20240301030154-2eb19c45f9a9/go.mod h1:0rggJ3Z7AxSCbOfi2PBO98sAftWWsI39V7v/aG9xPmQ=
+github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base v0.0.0-20240305010107-bc6ef6d6d3b6 h1:EeOJOjI/iIfoGuDnhoUIZrL4O0MjmCxh/FC+z7XL8cQ=
+github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base v0.0.0-20240305010107-bc6ef6d6d3b6/go.mod h1:0rggJ3Z7AxSCbOfi2PBO98sAftWWsI39V7v/aG9xPmQ=
+github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base v0.0.0-20240312064452-17fe47fa2fdd h1:Ja62EfwSEzGWVYKBV2xfq+hm3Uwo5BdCGIj0IcEmHbY=
+github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base v0.0.0-20240312064452-17fe47fa2fdd/go.mod h1:0rggJ3Z7AxSCbOfi2PBO98sAftWWsI39V7v/aG9xPmQ=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

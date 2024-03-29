@@ -29,7 +29,10 @@ var eventLogDumpCmd = &cobra.Command{
 			return err
 		}
 
-		el.Dump(cctrusted_base.QuoteDumpFormat(FlagFormat))
+		log.Println("Total ", len(el), " of event logs fetched.")
+		for _, e := range el {
+			e.Dump()
+		}
 		return nil
 	},
 }
@@ -49,7 +52,7 @@ var eventLogReplayCmd = &cobra.Command{
 			return err
 		}
 
-		replay := sdk.ReplayCCEventLog(el.EventLog())
+		replay := sdk.ReplayCCEventLog(el)
 		// Or direct `replay := el.Replay()`
 		for idx, elem := range replay {
 			for alg, v := range elem {
@@ -62,7 +65,7 @@ var eventLogReplayCmd = &cobra.Command{
 	},
 }
 
-func filterEventLog() (*cctrusted_base.EventLogger, error) {
+func filterEventLog() ([]cctrusted_base.FormatedTcgEvent, error) {
 	sdk, err := GetSDK()
 	if err != nil {
 		return nil, err

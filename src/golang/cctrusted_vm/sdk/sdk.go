@@ -3,6 +3,7 @@ package vmsdk
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 
 	cctrusted_vm "github.com/cc-api/cc-trusted-vmsdk/src/golang/cctrusted_vm"
@@ -62,17 +63,33 @@ func (s *SDK) ReplayCCEventLog(formatedEventLogs []cctrusted_base.FormatedTcgEve
 }
 
 // GetDefaultAlgorithm implements cctrusted_base.CCTrustedAPI.
-func (s *SDK) GetDefaultAlgorithm() cctrusted_base.TCG_ALG {
-	return s.cvm.DefaultAlgorithm()
+func (s *SDK) GetDefaultAlgorithm() (cctrusted_base.TCG_ALG, error) {
+	return s.cvm.DefaultAlgorithm(), nil
 }
 
 // SelectEventlog implements CCTrustedAPI.
-func (s *SDK) GetCCEventLog(start int32, count int32) (*cctrusted_base.EventLogger, error) {
+func (s *SDK) GetCCEventLog(params ...int32) ([]cctrusted_base.FormatedTcgEvent, error) {
 	el, err := s.internelEventlog()
 	if err != nil {
 		return nil, err
 	}
 	el.Parse()
+
+	var start int32
+	var count int32
+
+	// Fetch optional params according to user specification
+	if len(params) > 2 || len(params) == 0 {
+		log.Fatalf("Invalid params specified. Using default values.")
+		start = 0
+		count = int32(len(el.EventLog()))
+	} else if len(params) == 2 {
+		start = params[0]
+		count = params[1]
+	} else {
+		start = params[0]
+		count = int32(len(el.EventLog())) - start
+	}
 
 	if start != 0 || count != 0 {
 		el, err = el.Select(int(start), int(count))
@@ -81,7 +98,7 @@ func (s *SDK) GetCCEventLog(start int32, count int32) (*cctrusted_base.EventLogg
 		}
 	}
 
-	return el, nil
+	return el.EventLog(), nil
 }
 
 func (s *SDK) internelEventlog() (*cctrusted_base.EventLogger, error) {

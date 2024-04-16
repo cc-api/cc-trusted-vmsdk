@@ -121,12 +121,12 @@ func (s *SDK) internelEventlog() (*cctrusted_base.EventLogger, error) {
 }
 
 // Report implements CCTrustedAPI.
-func (s *SDK) GetCCReport(nonce, userData string, _ any) (cctrusted_base.Report, error) {
+func (s *SDK) GetCCReport(nonce, userData string, extraArgs map[string]any) (cctrusted_base.Report, error) {
 	if s.cvm == nil {
 		return nil, errors.New("no available cvm in sdk")
 	}
 
-	reportBytes, err := s.cvm.Report(nonce, userData)
+	reportStruct, err := s.cvm.Report(nonce, userData, extraArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (s *SDK) GetCCReport(nonce, userData string, _ any) (cctrusted_base.Report,
 	vmCtx := s.cvm.CVMContext()
 	switch vmCtx.VMType {
 	case cctrusted_base.TYPE_CC_TDX:
-		report, err := tdx.NewTdxReportFromBytes(reportBytes)
+		report, err := tdx.NewTdxReportFromBytes(reportStruct.Outblob)
 		if err != nil {
 			return nil, err
 		}

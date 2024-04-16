@@ -15,6 +15,7 @@ var _ cctrusted_vm.Device = (*TDXDevice)(nil)
 
 type TDXDevice struct {
 	spec tdx.TDXDeviceSpec
+	cctrusted_vm.GenericDevice
 	QuoteHandler
 }
 
@@ -61,17 +62,30 @@ func (t *TDXDevice) initDevice() error {
 }
 
 // Report implements cctrusted_vm.Device, get CC report
-func (t *TDXDevice) Report(nonce, userDate string) ([]byte, error) {
+func (t *TDXDevice) Report(nonce, userData string, extraArgs map[string]any) (cctrusted_base.CcReport, error) {
+	var resp cctrusted_base.CcReport
+	var err error
+
+	// call parent Report() func to retrieve cc report using Configfs-tsm
+	resp, err = t.GenericDevice.Report(nonce, userData, extraArgs)
+	if err == nil {
+		return resp, nil
+	}
+
 	// get tdx report
-	tdreport, err := t.TdReport(nonce, userDate)
+	tdreport, err := t.TdReport(nonce, userData)
 	if err != nil {
-		return nil, err
+		return cctrusted_base.CcReport{}, err
 	}
 	// get tdx quote, aka. CC report
 	quote, err := t.Quote(tdreport)
 	if err != nil {
-		return nil, err
+		return cctrusted_base.CcReport{}, err
 	}
 
-	return quote, nil
+	resp = cctrusted_base.CcReport{
+		Outblob: quote,
+	}
+
+	return resp, nil
 }

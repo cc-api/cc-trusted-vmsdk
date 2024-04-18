@@ -1,12 +1,99 @@
 use crate::tdvm::TdxVM;
 use anyhow::*;
+use cctrusted_base::api_data::CcReport;
 use cctrusted_base::cc_type::*;
 use cctrusted_base::tcg::EventLogEntry;
 use cctrusted_base::tcg::{TcgAlgorithmRegistry, TcgDigest};
-use std::path::Path;
+use core::result::Result::Ok;
+use sha2::{Digest, Sha512};
+use std::{fs, path::Path};
+use tempfile::tempdir_in;
 
 // the interfaces a CVM should implement
 pub trait CVM {
+    /***
+        retrive ConfigFS-TSM report
+
+        Args:
+            nonce (String): against replay attacks
+            data (String): user data
+
+        Returns:
+            the CcReport or error information
+    */
+    fn process_tsm_report(
+        &mut self,
+        nonce: Option<String>,
+        data: Option<String>,
+    ) -> Result<CcReport, anyhow::Error> {
+        let tsm_dir = Path::new(TSM_PREFIX);
+        if !tsm_dir.exists() {
+            return Err(anyhow!(
+                "[process_tsm_report] TSM is not supported in the current environment"
+            ));
+        }
+
+        // Update the hash value if nonce or data exists
+        let mut hasher = Sha512::new();
+        if nonce.is_some() {
+            match base64::decode(nonce.unwrap()) {
+                Ok(v) => hasher.update(v),
+                Err(e) => return Err(anyhow!("[process_tsm_report] nonce decode failed: {}", e)),
+            }
+        }
+        if data.is_some() {
+            match base64::decode(data.unwrap()) {
+                Ok(v) => hasher.update(v),
+                Err(e) => return Err(anyhow!("[process_tsm_report] data decode failed: {}", e)),
+            }
+        }
+
+        let inblob: [u8; 64] = hasher
+            .finalize()
+            .as_slice()
+            .try_into()
+            .expect("[process_tsm_report] Wrong length of data");
+
+        let tsm_report = tempdir_in(tsm_dir)?;
+        // Write hash array to inblob
+        fs::write(tsm_report.path().join("inblob"), inblob)
+            .expect("[process_tsm_report] Write to inblob failed");
+        // Read outblob
+        let outblob = fs::read(tsm_report.path().join("outblob"))
+            .expect("[process_tsm_report] outblob read failed");
+        // Read provider
+        let provider = fs::read_to_string(tsm_report.path().join("provider"))
+            .expect("[process_tsm_report] provider read failed");
+        // Read auxblob if exists
+        let auxblob = match fs::read(tsm_report.path().join("auxblob")) {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        };
+        // Read generation and check the generation
+        let generation = fs::read_to_string(tsm_report.path().join("generation"))
+            .expect("[process_tsm_report] generation read failed")
+            .trim()
+            .parse::<u32>()
+            .expect("[process_tsm_report] generation parse failed");
+        if generation > 1 {
+            return Err(anyhow!("[process_tsm_report] check write race failed"));
+        }
+        // Convert provider to TeeType
+        let cc_type = match provider.as_str() {
+            "tdx_guest\n" => TeeType::TDX,
+            "sev_guest\n" => TeeType::SEV,
+            &_ => todo!(),
+        };
+
+        Ok(CcReport {
+            cc_report: outblob,
+            cc_type,
+            cc_report_generation: Some(generation),
+            cc_provider: Some(provider),
+            cc_aux_blob: auxblob,
+        })
+    }
+
     /***
         retrive CVM signed report
 
@@ -21,7 +108,7 @@ pub trait CVM {
         &mut self,
         nonce: Option<String>,
         data: Option<String>,
-    ) -> Result<Vec<u8>, anyhow::Error>;
+    ) -> Result<CcReport, anyhow::Error>;
 
     /***
         retrive CVM max number of measurement registers
@@ -115,6 +202,5 @@ pub fn get_cvm_type() -> CcType {
 
     CcType {
         tee_type: tee_type.clone(),
-        tee_type_str: TEE_NAME_MAP.get(&tee_type).unwrap().to_owned(),
     }
 }

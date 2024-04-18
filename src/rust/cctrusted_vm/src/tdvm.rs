@@ -2,6 +2,7 @@
 
 use crate::cvm::*;
 use anyhow::*;
+use cctrusted_base::api_data::CcReport;
 use cctrusted_base::cc_type::*;
 use cctrusted_base::eventlog::EventLogs;
 use cctrusted_base::tcg::*;
@@ -53,7 +54,6 @@ impl TdxVM {
     pub fn new() -> TdxVM {
         let cc_type = CcType {
             tee_type: TeeType::TDX,
-            tee_type_str: TEE_NAME_MAP.get(&TeeType::TDX).unwrap().to_owned(),
         };
 
         let version = Self::get_tdx_version();
@@ -198,7 +198,12 @@ impl CVM for TdxVM {
         &mut self,
         nonce: Option<String>,
         data: Option<String>,
-    ) -> Result<Vec<u8>, anyhow::Error> {
+    ) -> Result<CcReport, anyhow::Error> {
+        match self.process_tsm_report(nonce.clone(), data.clone()) {
+            Ok(v) => return Ok(v),
+            Err(e) => log::info!("[process_cc_report] try TSM failed: {}", e),
+        };
+
         let tdreport = match self.get_td_report(nonce, data) {
             Ok(r) => r,
             Err(e) => {
@@ -348,7 +353,11 @@ impl CVM for TdxVM {
 
             let _ = shutdown(qgs_vsocket.as_raw_fd(), Shutdown::Both);
 
-            return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
+            let report = qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec();
+            return Ok(CcReport {
+                cc_report: report,
+                ..Default::default()
+            });
         }
 
         log::info!("[process_cc_report] get TDX quote with TDVMCALL");
@@ -454,7 +463,11 @@ impl CVM for TdxVM {
             ));
         }
 
-        Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec())
+        let report = qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec();
+        Ok(CcReport {
+            cc_report: report,
+            ..Default::default()
+        })
     }
 
     // CVM trait function: get tdx rtmr max index
@@ -600,7 +613,7 @@ impl CVM for TdxVM {
     // CVM trait function: dump CVM basic information
     fn dump(&self) {
         info!("======================================");
-        info!("CVM type = {}", self.cc_type.tee_type_str);
+        info!("CVM type = {}", String::from(self.get_cc_type().tee_type));
         info!(
             "CVM version = {}",
             TDX_VERSION_MAP.get(&self.version).unwrap().to_owned()

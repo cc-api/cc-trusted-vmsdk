@@ -30,7 +30,7 @@ def main():
                         help='index of first event log to fetch', dest='start')
     parser.add_argument("-c", type=int, help="number of event logs to fetch",
                         dest="count")
-    parser.add_argument("-f", type=bool, help="enable canonical tlv format", default=False,
+    parser.add_argument("-f", type=str, help="enable canonical tlv format", default="false",
                         dest="cel_format")
     args = parser.parse_args()
 
@@ -50,7 +50,7 @@ def main():
     LOG.info("Dump collected event logs:")
     for event in event_logs:
         if isinstance(event, TcgTpmsCelEvent):
-            if args.cel_format:
+            if args.cel_format.lower() == 'true':
                 TcgTpmsCelEvent.encode(event, TcgEventLog.TCG_FORMAT_CEL_TLV).dump()
             else:
                 event.to_pcclient_format().dump()

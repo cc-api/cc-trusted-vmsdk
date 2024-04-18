@@ -156,7 +156,8 @@ class ConfidentialVM:
             if data is not None:
                 hash_algo.update(bytes(data))
             input_data = hash_algo.digest()
-        if extraArgs is not None and "privilege" in extraArgs.keys():
+        if extraArgs is not None and isinstance(extraArgs, dict) and \
+            "privilege" in extraArgs.keys():
             privilege = extraArgs["privilege"]
 
         td_report = None

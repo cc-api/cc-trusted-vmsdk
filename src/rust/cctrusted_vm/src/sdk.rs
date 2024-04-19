@@ -22,15 +22,7 @@ impl CCTrustedApi for API {
             Ok(mut cvm) => {
                 // call CVM trait defined methods
                 // cvm.dump();
-                Ok(CcReport {
-                    cc_report: match cvm.process_cc_report(nonce, data) {
-                        Ok(r) => r,
-                        Err(e) => {
-                            return Err(anyhow!("[get_cc_report] error get cc report: {:?}", e));
-                        }
-                    },
-                    cc_type: cvm.get_cc_type().tee_type,
-                })
+                cvm.process_cc_report(nonce, data)
             }
             Err(e) => Err(anyhow!("[get_cc_report] error create cvm: {:?}", e)),
         }

@@ -9,7 +9,6 @@ import pytest
 from cctrusted_base.api import CCTrustedApi
 from cctrusted_base.eventlog import EventLogs
 from cctrusted_base.tcg import TcgAlgorithmRegistry
-from cctrusted_base.tdx.common import TDX_REPORTDATA_LEN
 from cctrusted_base.tdx.quote import TdxQuote, TdxQuoteBody
 from cctrusted_base.tdx.rtmr import TdxRTMR
 from cctrusted_vm.sdk import CCTrustedVmSdk
@@ -141,15 +140,13 @@ def _check_quote_reportdata(quote, nonce=None, userdata=None):
     out_data = body.reportdata
     assert out_data is not None
     expectation = None
-    if nonce is None and userdata is None:
-        expectation = bytes([0]) * TDX_REPORTDATA_LEN
-    else:
-        hash_algo = hashlib.sha512()
-        if nonce is not None:
-            hash_algo.update(bytes(base64.b64decode(nonce)))
-        if userdata is not None:
-            hash_algo.update(bytes(base64.b64decode(userdata)))
-        expectation = hash_algo.digest()
+    hash_algo = hashlib.sha512()
+    expectation = hash_algo.digest()
+    if nonce is not None:
+        hash_algo.update(bytes(base64.b64decode(nonce)))
+    if userdata is not None:
+        hash_algo.update(bytes(base64.b64decode(userdata)))
+    expectation = hash_algo.digest()
     assert expectation == out_data
 
 def tdx_check_quote_with_valid_input():

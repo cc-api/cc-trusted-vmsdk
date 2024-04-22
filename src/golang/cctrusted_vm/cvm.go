@@ -78,6 +78,10 @@ func (d *GenericDevice) Report(nonce, userData string, extraArgs map[string]any)
 			return cctrusted_base.CcReport{}, errors.New("Failed to get generation info.")
 		}
 		generation, _ = strconv.Atoi(string(rawGeneration))
+		// Check if the outblob has been corrupted during file open
+		if generation > 1 {
+			return cctrusted_base.CcReport{}, errors.New("Found corrupted generation.")
+		}
 	}
 
 	if _, err = os.Stat(filepath.Join(tempdir, "provider")); !os.IsNotExist(err) {

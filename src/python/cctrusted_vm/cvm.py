@@ -146,16 +146,14 @@ class ConfidentialVM:
         # Process input data
         input_data = None
         privilege = None
-        if nonce is None and data is None:
-            LOG.info("No report data, generating default quote")
-        else:
-            LOG.info("Calculate report data by nonce and user data")
-            hash_algo = hashlib.sha512()
-            if nonce is not None:
-                hash_algo.update(bytes(nonce))
-            if data is not None:
-                hash_algo.update(bytes(data))
-            input_data = hash_algo.digest()
+
+        LOG.info("Calculate report data by nonce and user data")
+        hash_algo = hashlib.sha512()
+        if nonce is not None:
+            hash_algo.update(bytes(nonce))
+        if data is not None:
+            hash_algo.update(bytes(data))
+        input_data = hash_algo.digest()
         if extraArgs is not None and isinstance(extraArgs, dict) and \
             "privilege" in extraArgs.keys():
             privilege = extraArgs["privilege"]
@@ -490,16 +488,14 @@ class TdxVM(ConfidentialVM):
 
         report_bytes = None
         input_data = None
-        if nonce is None and data is None:
-            LOG.info("No report data, generating default quote")
-        else:
-            LOG.info("Calculate report data by nonce and user data")
-            hash_algo = hashlib.sha512()
-            if nonce is not None:
-                hash_algo.update(bytes(nonce))
-            if data is not None:
-                hash_algo.update(bytes(data))
-            input_data = hash_algo.digest()
+
+        LOG.info("Calculate report data by nonce and user data")
+        hash_algo = hashlib.sha512()
+        if nonce is not None:
+            hash_algo.update(bytes(nonce))
+        if data is not None:
+            hash_algo.update(bytes(data))
+        input_data = hash_algo.digest()
 
         # Check if appropriate qgs vsock port specified in TDX attest config
         # If specified, use vsock to get quote and return TdxQuote object

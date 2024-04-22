@@ -122,6 +122,7 @@ class ConfidentialVM:
         raise NotImplementedError("Should be implemented by inherited class")
 
     @abstractmethod
+    # pylint: disable-next=R0911
     def get_cc_report(self, nonce: bytearray, data: bytearray, extraArgs) -> CcReport:
         """Get the CcReport (i.e. quote) for given nonce and data.
 
@@ -180,9 +181,16 @@ class ConfidentialVM:
             with open(os.path.join(tempdir, "inblob"), 'wb') as inblob_file:
                 inblob_file.write(input_data)
 
-            # Read the output of report
-            with open(os.path.join(tempdir, "outblob"), 'rb') as outblob_file:
-                td_report = outblob_file.read()
+            # Read the output of report and prevent case of resource busy
+            try:
+                with open(os.path.join(tempdir, "outblob"), 'rb') as outblob_file:
+                    td_report = outblob_file.read()
+            except OSError:
+                LOG.error("Read outblob failed with OSError")
+                return None
+            except:
+                LOG.error("Error in opening outblob file.")
+                return None
 
             # Read provider info
             with open(os.path.join(tempdir, "provider"), 'r', encoding='utf-8') as provider_file:
@@ -192,6 +200,10 @@ class ConfidentialVM:
             with open(os.path.join(tempdir, "generation"), 'r', encoding='utf-8') \
                 as generation_file:
                 generation = generation_file.read()
+            # Check if the outblob has been corrupted during file open
+            if int(generation) > 1:
+                LOG.error("Found corrupted generation. Skipping attestation report fetching...")
+                return None
 
             if os.path.exists(os.path.join(tempdir, "auxblob")):
                 with open(os.path.join(tempdir, "auxblob"), 'rb') as auxblob_file:

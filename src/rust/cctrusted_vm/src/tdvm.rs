@@ -2,6 +2,7 @@
 
 use crate::cvm::*;
 use anyhow::*;
+use cctrusted_base::api::ParseCcReport;
 use cctrusted_base::api_data::CcReport;
 use cctrusted_base::cc_type::*;
 use cctrusted_base::eventlog::EventLogs;
@@ -476,7 +477,11 @@ impl CVM for TdxVM {
     }
 
     // CVM trait function: retrieve TDX RTMR
-    fn process_cc_measurement(&self, index: u8, algo_id: u16) -> Result<TcgDigest, anyhow::Error> {
+    fn process_cc_measurement(
+        &mut self,
+        index: u8,
+        algo_id: u16,
+    ) -> Result<TcgDigest, anyhow::Error> {
         match TdxRTMR::is_valid_index(index) {
             Ok(_) => (),
             Err(e) => return Err(anyhow!("[process_cc_measurement] {:?}", e)),
@@ -484,7 +489,33 @@ impl CVM for TdxVM {
 
         match TdxRTMR::is_valid_algo(algo_id) {
             Ok(_) => (),
-            Err(e) => return Err(anyhow!("[process_cc_measurement] {:?}", e)),
+            Err(e) => return Err(anyhow!("D {:?}", e)),
+        };
+
+        match self.process_tsm_report(None, None) {
+            Ok(v) => {
+                let tdx_quote: TdxQuote = match CcReport::parse_cc_report(v.cc_report) {
+                    Ok(q) => q,
+                    Err(e) => {
+                        return Err(anyhow!(
+                            "[process_cc_measurement] error parse tdx quote: {:?}",
+                            e
+                        ));
+                    }
+                };
+                let rtmr = match index {
+                    0 => tdx_quote.body.rtmr0,
+                    1 => tdx_quote.body.rtmr1,
+                    2 => tdx_quote.body.rtmr2,
+                    3 => tdx_quote.body.rtmr3,
+                    _ => return Err(anyhow!("[process_cc_measurement] invalid index")),
+                };
+                return match TdxRTMR::new(index, algo_id, rtmr) {
+                    Ok(rtmr) => Ok(rtmr.get_tcg_digest(algo_id)),
+                    Err(e) => Err(anyhow!("error creating TdxRTMR {:?}", e)),
+                };
+            }
+            Err(e) => log::info!("[process_cc_report] try TSM failed: {}", e),
         };
 
         let tdreport_raw = match self.get_td_report(None, None) {

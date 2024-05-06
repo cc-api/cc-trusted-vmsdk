@@ -6,7 +6,7 @@ use cctrusted_base::tcg::EventLogEntry;
 use cctrusted_base::tcg::{TcgAlgorithmRegistry, TcgDigest};
 use core::result::Result::Ok;
 use sha2::{Digest, Sha512};
-use std::{fs, path::Path};
+use std::{env, fs, path::Path};
 use tempfile::tempdir_in;
 
 // the interfaces a CVM should implement
@@ -26,12 +26,30 @@ pub trait CVM {
         nonce: Option<String>,
         data: Option<String>,
     ) -> Result<CcReport, anyhow::Error> {
-        let tsm_dir = Path::new(TSM_PREFIX);
-        if !tsm_dir.exists() {
-            return Err(anyhow!(
-                "[process_tsm_report] TSM is not supported in the current environment"
-            ));
-        }
+        let (tmp_dir, tmp_str);
+        let tsm_report = match env::var("TSM_REPORT") {
+            Ok(v) => {
+                tmp_str = v;
+                let tsm_dir = Path::new(&tmp_str);
+                if !tsm_dir.exists() {
+                    return Err(anyhow!(
+                        "[process_tsm_report] TSM_REPORT is defined but directory does not exist"
+                    ));
+                }
+                tsm_dir
+            }
+            Err(_) => {
+                let tsm_dir = Path::new(TSM_PREFIX);
+                if !tsm_dir.exists() {
+                    return Err(anyhow!(
+                        "[process_tsm_report] TSM is not supported in the current environment"
+                    ));
+                }
+
+                tmp_dir = tempdir_in(tsm_dir)?;
+                tmp_dir.path()
+            }
+        };
 
         // Update the hash value if nonce or data exists
         let mut hasher = Sha512::new();
@@ -54,28 +72,33 @@ pub trait CVM {
             .try_into()
             .expect("[process_tsm_report] Wrong length of data");
 
-        let tsm_report = tempdir_in(tsm_dir)?;
-        // Write hash array to inblob
-        fs::write(tsm_report.path().join("inblob"), inblob)
-            .expect("[process_tsm_report] Write to inblob failed");
-        // Read outblob
-        let outblob = fs::read(tsm_report.path().join("outblob"))
-            .expect("[process_tsm_report] outblob read failed");
-        // Read provider
-        let provider = fs::read_to_string(tsm_report.path().join("provider"))
-            .expect("[process_tsm_report] provider read failed");
-        // Read auxblob if exists
-        let auxblob = match fs::read(tsm_report.path().join("auxblob")) {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        };
-        // Read generation and check the generation
-        let generation = fs::read_to_string(tsm_report.path().join("generation"))
+        let pre_generation = fs::read_to_string(tsm_report.join("generation"))
             .expect("[process_tsm_report] generation read failed")
             .trim()
             .parse::<u32>()
             .expect("[process_tsm_report] generation parse failed");
-        if generation > 1 {
+
+        // Write hash array to inblob
+        fs::write(tsm_report.join("inblob"), inblob)
+            .expect("[process_tsm_report] Write to inblob failed");
+        // Read outblob
+        let outblob =
+            fs::read(tsm_report.join("outblob")).expect("[process_tsm_report] outblob read failed");
+        // Read provider
+        let provider = fs::read_to_string(tsm_report.join("provider"))
+            .expect("[process_tsm_report] provider read failed");
+        // Read auxblob if exists
+        let auxblob = match fs::read(tsm_report.join("auxblob")) {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        };
+        // Read generation and check the generation
+        let generation = fs::read_to_string(tsm_report.join("generation"))
+            .expect("[process_tsm_report] generation read failed")
+            .trim()
+            .parse::<u32>()
+            .expect("[process_tsm_report] generation parse failed");
+        if generation - pre_generation > 1 {
             return Err(anyhow!("[process_tsm_report] check write race failed"));
         }
         // Convert provider to TeeType
@@ -131,7 +154,11 @@ pub trait CVM {
         Returns:
             TcgDigest struct
     */
-    fn process_cc_measurement(&self, index: u8, algo_id: u16) -> Result<TcgDigest, anyhow::Error>;
+    fn process_cc_measurement(
+        &mut self,
+        index: u8,
+        algo_id: u16,
+    ) -> Result<TcgDigest, anyhow::Error>;
 
     /***
         retrive CVM eventlogs
@@ -190,7 +217,31 @@ pub fn build_cvm() -> Result<Box<dyn BuildCVM>, anyhow::Error> {
 // detect CVM type
 pub fn get_cvm_type() -> CcType {
     let mut tee_type = TeeType::PLAIN;
-    if Path::new(TEE_TPM_PATH).exists() {
+
+    if Path::new(TSM_PREFIX).exists() || env::var("TSM_REPORT").is_ok() {
+        let provider = match env::var("TSM_REPORT") {
+            Ok(v) => {
+                let tsm_dir = Path::new(&v);
+                fs::read_to_string(tsm_dir.join("provider"))
+                    .expect("[get_cvm_type] provider read failed")
+            }
+            Err(_) => {
+                let tsm_dir = Path::new(TSM_PREFIX);
+                fs::read_to_string(
+                    tempdir_in(tsm_dir)
+                        .expect("[get_cvm_type] create temp dir failed")
+                        .path()
+                        .join("provider"),
+                )
+                .expect("[get_cvm_type] provider read failed")
+            }
+        };
+        tee_type = match provider.as_str() {
+            "tdx_guest\n" => TeeType::TDX,
+            "sev_guest\n" => TeeType::SEV,
+            &_ => todo!(),
+        };
+    } else if Path::new(TEE_TPM_PATH).exists() {
         tee_type = TeeType::TPM;
     } else if Path::new(TEE_TDX_1_0_PATH).exists() || Path::new(TEE_TDX_1_5_PATH).exists() {
         tee_type = TeeType::TDX;

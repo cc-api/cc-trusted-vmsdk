@@ -13,11 +13,11 @@ This SDK simplifies the process of creating secure and trusted virtual machines 
 ## 2. Features
 
 - Support Attestation through Integrity Measurement Architecture (IMA): Ensure the integrity of Confidential Virtual Machine (CVM) instances through robust attestation mechanisms leveraging Integrity Measurement Architecture (IMA). It provides trusted primitives (measurement, eventlog, quote) of CVM. All below steps are supposed to run in a CVM, such as Intel® TD.
-  
+
 - Support `cloud-init` for seamless initial state setting for CVMs: Utilize `cloud-init` for effortless setup of initial states for Confidential Virtual Machines (CVMs), ensuring a smooth and consistent bootstrapping process.
 
 - Support `Terraform`-alike deployment: Facilitate easy and efficient deployment of Confidential Virtual Machines (CVMs) with support for Terraform-like infrastructure provisioning.
-  
+
 - Support seamless Transformation of Ubuntu and Debian Images into CVM Images: Effortlessly convert regular Ubuntu and Debian images into secure and trusted Confidential Virtual Machine (CVM) images, ensuring compatibility and reliability.
 
 - Support Rust and Python modes
@@ -27,8 +27,9 @@ This SDK simplifies the process of creating secure and trusted virtual machines 
 
 ## 3. Getting Started
 
-VMSDK is supposed to provide VM image rewrite to CVM image, and provide trusted primitives (measurement, eventlog, quote) of CVM.
-All below steps are supposed to run in a CVM, such as Intel® TD.
+VMSDK is supposed to provide VM image rewrite to CVM image, and provide trusted primitives (measurement, eventlog, quote)
+of CVM.
+All below steps are supposed to run in a CVM, such as Intel® TD with native CCEL and RTMR as trusted foundation.
 
 ### Installation
 
@@ -48,7 +49,7 @@ $ source setupenv.sh
 
 ### Run CLI tool
 
-It provides 3 CLI tools for quick usage of Python VMSDK. 
+It provides 3 CLI tools for quick usage of Python VMSDK.
 
 - [cc_event_log_cli.py](./src/python/cc_event_log_cli.py): Print event log of CVM.
 - [cc_imr_cli.py](./src/python/cc_imr_cli.py): Print algorithm and hash od Integrity Measurement Registers (IMR).
@@ -85,14 +86,26 @@ $ python3 -m pytest -v ./src/python/tests/test_sdk.py
 
 _NOTE: The tests need to run via root user._
 
-### Test the CVM image 
 
-```
-$ ./qemu-test.sh -i /path-to-your-cvm-qcow2/td.qcow2 -k /path-to-your-td-guest-os/vmlinuz -r /dev/vda1 
-```
+## 4. Run in Google TDX VM environment with vTPM
 
+Google TDX VM does not support CCEL and RTMR yet, but only support vTPM. So this
+SDK will get event log and integrated measurement register from vTPM by default.
 
-## 4. License
+Please install following pre-requisite for Google TDVM with Ubuntu 22.04 distro:
+
+``
+sudo apt install libtss-dev
+sudo python3 -m pip install tpm2-pytss
+``
+
+- Dump the PCR (IMR) in Google' TDX instance as follows:
+![](/docs/gogle_tdx_tpm_dump_imr.png)
+
+- Dump the TPM event log in Google's TDX instance as follows:
+![](/docs/gogle_tdx_tpm_dump_eventlog.png)
+
+## 5. License
 This project is licensed under the Apache 2.0 License.
 
 ## 5. Contact

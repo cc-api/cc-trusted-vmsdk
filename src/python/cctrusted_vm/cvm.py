@@ -101,6 +101,8 @@ class ConfidentialVM:
         for devpath in TdxVM.DEVICE_NODE_PATH.values():
             if os.path.exists(devpath):
                 return CCTrustedApi.TYPE_CC_TDX
+        if os.path.exists(TpmVM.DEFAULT_TPM_DEVICE_NODE):
+            return CCTrustedApi.TYPE_CC_TPM
         return CCTrustedApi.TYPE_CC_NONE
 
     @abstractmethod
@@ -233,6 +235,8 @@ class ConfidentialVM:
             cc_type = ConfidentialVM.detect_cc_type()
             if cc_type is CCTrustedApi.TYPE_CC_TDX:
                 obj = TdxVM()
+            elif cc_type is CCTrustedApi.TYPE_CC_TPM:
+                obj = TpmVM()
             else:
                 LOG.error("Unsupported confidential environment.")
                 return None
@@ -242,6 +246,43 @@ class ConfidentialVM:
             else:
                 LOG.error("Fail to initialize the confidential VM.")
         return ConfidentialVM._inst
+
+from tpm2_pytss import ESAPI
+from cctrusted_base.tpm.pcr import TpmPCR
+
+class TpmVM(ConfidentialVM):
+
+    DEFAULT_TPM_DEVICE_NODE="/dev/tpm0"
+    BIOS_MEAUSREMENT="/sys/kernel/security/tpm0/binary_bios_measurements"
+
+    def __init__(self, dev_node=DEFAULT_TPM_DEVICE_NODE):
+        ConfidentialVM.__init__(self, CCTrustedApi.TYPE_CC_TPM)
+        self._dev_node = dev_node
+        self._esapi = ESAPI("device:" + dev_node)
+
+    @property
+    def default_algo_id(self):
+        return TcgAlgorithmRegistry.TPM_ALG_SHA256
+
+    def process_cc_report(self, report_data=None) -> bool:
+        """
+        For TPM, we do not need to get integrited measurement register
+        """
+        for index in range(24):
+            _, _, digests = self._esapi.pcr_read("sha256:%d" % index)
+            assert digests.count == 1
+            self._imrs[index] = TpmPCR(index, bytes.fromhex(str(digests.digests[0])))
+        return True
+
+    def process_eventlog(self) -> bool:
+        try:
+            with open(TpmVM.BIOS_MEAUSREMENT, "rb") as f:
+                self._boot_time_event_log = f.read()
+                assert len(self._boot_time_event_log) > 0
+        except (PermissionError, OSError):
+            LOG.error("Need root permission to open file %s", TdxVM.BIOS_MEAUSREMENT)
+            return False
+        return True
 
 class TdxVM(ConfidentialVM):
 

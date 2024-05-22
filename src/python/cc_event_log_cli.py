@@ -44,7 +44,7 @@ def main():
     LOG.info("Replayed result of collected event logs:")
     # pylint: disable-next=C0201
     for key in res.keys():
-        LOG.info("RTMR[%d]: ", key)
+        LOG.info("IMR[%d]: ", key)
         LOG.info("     %s", res.get(key).get(12).hex())
 
     LOG.info("Dump collected event logs:")

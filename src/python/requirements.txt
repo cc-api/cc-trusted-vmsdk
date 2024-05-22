@@ -1,2 +1,3 @@
 cctrusted_base
 pytest
+tpm2-pytss

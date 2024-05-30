@@ -80,35 +80,44 @@ $ git clone https://github.com/cc-api/cc-trusted-vmsdk.git
 $ cd cc-trusted-vmsdk
 $ sudo su
 $ source setupenv.sh
-$ python3 -m pip install pytest
 $ python3 -m pytest -v ./src/python/tests/test_sdk.py
 ```
 
 _NOTE: The tests need to run via root user._
 
 
-## 4. Run in Google TDX VM environment with vTPM
+## 4. Run in Google Cloud TDX VM environment with vTPM
 
-Google TDX VM does not support CCEL and RTMR yet, but only support vTPM. So this
-SDK will get event log and integrated measurement register from vTPM by default.
+Google Cloud Platform (GCP) [TDX Preview](https://cloud.google.com/confidential-computing/confidential-vm/docs/create-a-confidential-vm-instance#intel-tdx) does not support CCEL and RTMR yet, but it supports vTPM.
+The SDK will get event log and integrated measurement register from vTPM for GCP TDs.
 
-Please install following pre-requisite for Google TDVM with Ubuntu 22.04 distro:
+Refer to [How to create GCP TD](https://github.com/cc-api/confidential-cluster/blob/main/deployment/single_node_gcp.md) to create a GCP TD.
 
-``
-sudo apt install libtss-dev
-sudo python3 -m pip install tpm2-pytss
-``
+Run the following steps in the GCP TD:
 
-- Dump the PCR (IMR) in Google' TDX instance as follows:
+```
+$ git clone https://github.com/cc-api/cc-trusted-vmsdk.git
+$ cd cc-trusted-vmsdk
+$ sudo su
+$ source setupenv.sh
+
+# Get PCRs of vTPM
+$ python3 ./src/python/cc_imr_cli.py
+
+# Get vTPM event logs in TCG compliant format
+$ python3 ./src/python/cc_event_log_cli.py
+```
+
+- The example output of PCRs (IMR) in a GCP TD as follows:
 ![](/docs/gogle_tdx_tpm_dump_imr.png)
 
-- Dump the TPM event log in Google's TDX instance as follows:
+- The example output of the TPM event log in a GCP TD as follows:
 ![](/docs/gogle_tdx_tpm_dump_eventlog.png)
 
 ## 5. License
 This project is licensed under the Apache 2.0 License.
 
-## 5. Contact
-For any inquiries or support, please contact us at XXX.
+## 6. Contact
+For any inquiries or support, please open an issue or contact us at [Slack](https://cc-api.slack.com/archives/C070P10A0DR).
 
 

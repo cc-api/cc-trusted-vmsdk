@@ -34,10 +34,10 @@ def _check_imr(imr_index: int, alg_id: int, rtmr: bytes):
         alg_id: an integer specified the hash algorithm.
         rtmr: bytes of RTMR data for comparison.
     """
-    assert 0 <= imr_index < TdxRTMR.RTMR_COUNT
+    assert 0 < imr_index <= TdxRTMR.RTMR_COUNT
     assert rtmr is not None
     assert alg_id == TcgAlgorithmRegistry.TPM_ALG_SHA384
-    imr = CCTrustedVmSdk.inst().get_cc_measurement([imr_index, alg_id])
+    imr = CCTrustedVmSdk.inst().get_cc_measurement([imr_index - 1, alg_id])
     assert imr is not None
     digest_obj = imr.digest(alg_id)
     assert digest_obj is not None
@@ -128,8 +128,8 @@ def _check_quote_rtmrs(quote):
     # Compare all the RTMR values which are used by the event log.
     # Please note that some RTMR may not be used.
     for imr_idx, digests in rtmrs.items():
-        assert quote_rtmrs[imr_idx] == digests[alg.alg_id], \
-            f"RTMR{imr_idx} doesn't equal the replay from event log!"
+        assert quote_rtmrs[imr_idx - 1] == digests[alg.alg_id], \
+            f"RTMR{imr_idx - 1} doesn't equal the replay from event log!"
 
 def _check_quote_reportdata(quote, nonce=None, userdata=None):
     """Check the userdata in quote result."""

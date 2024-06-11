@@ -7,6 +7,7 @@ import os
 from cctrusted_base.api import CCTrustedApi
 from cctrusted_base.eventlog import TcgEventLog
 from cctrusted_base.tcgcel import TcgTpmsCelEvent
+from cctrusted_base.tcg import TcgAlgorithmRegistry
 from cctrusted_vm.cvm import ConfidentialVM
 from cctrusted_vm.sdk import CCTrustedVmSdk
 
@@ -41,11 +42,17 @@ def main():
     LOG.info("Total %d of event logs fetched.", len(event_logs))
 
     res = CCTrustedApi.replay_cc_eventlog(event_logs)
+    # pylint: disable-next=C0301
+    LOG.info("Note: If the underlying platform is TDX, the IMR index showing is cc measurement register instead of TDX measurement register.")
+    # pylint: disable-next=C0301
+    LOG.info("Please refer to the spec https://www.intel.com/content/www/us/en/content-details/726790/guest-host-communication-interface-ghci-for-intel-trust-domain-extensions-intel-tdx.html")
     LOG.info("Replayed result of collected event logs:")
     # pylint: disable-next=C0201
-    for key in res.keys():
-        LOG.info("IMR[%d]: ", key)
-        LOG.info("     %s", res.get(key).get(12).hex())
+    for k in sorted(res.keys()):
+        LOG.info("IMR[%d]: ", k)
+        for alg, h in res.get(k).items():
+            LOG.info("   %s: ", TcgAlgorithmRegistry.get_algorithm_string(alg))
+            LOG.info("      %s", h.hex())
 
     LOG.info("Dump collected event logs:")
     for event in event_logs:

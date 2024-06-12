@@ -10,7 +10,7 @@ fi
 
 # setup virtualenv and PYTHONPATH
 apt-get update
-apt-get install -y python3-virtualenv pkg-config libtss-dev
+apt-get install -y python3-virtualenv pkg-config libtss-dev libtss2-dev
 
 if [[ -d ${CURR_DIR}/venv ]]; then
     echo "===========> Remove ${CURR_DIR}/venv and create a new one"

@@ -71,14 +71,28 @@ def main():
         help="Output format: raw/human. Default raw.",
         type=out_format_validator
     )
+    parser.add_argument(
+        "--pcr-selection",
+        type=str,
+        default="sha256:1,2,10",
+        help="PCR Selection to generate quote",
+        dest="pcr_selection"
+    )
+    parser.add_argument("--ak-context", type=str, help="Path to ak context", dest="ak_context")
     args = parser.parse_args()
 
     nonce = make_nounce()
     LOG.info("demo random number in base64: %s", nonce.decode("utf-8"))
     userdata = make_userdata()
     LOG.info("demo user data in base64: %s", userdata.decode("utf-8"))
+    extra_args = {}
+    extra_args["pcr_selection"] = args.pcr_selection
+    extra_args["ak_context"] = args.ak_context
 
-    quote = CCTrustedVmSdk.inst().get_cc_report(nonce, userdata)
+    if ConfidentialVM.detect_cc_type() == CCTrustedApi.TYPE_CC_TPM:
+        quote = CCTrustedVmSdk.inst().get_cc_report(nonce, userdata, extra_args)
+    else:
+        quote = CCTrustedVmSdk.inst().get_cc_report(nonce, userdata)
     if quote is not None:
         quote.dump(args.out_format == OUT_FORMAT_RAW)
     else:

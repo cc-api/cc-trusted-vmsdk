@@ -97,12 +97,13 @@ class ConfidentialVM:
     @staticmethod
     def detect_cc_type():
         """Detect the type of current confidential VM"""
-        # TODO: refine the justification
+        #TODO: refine the justification
+        # support TPM as the first priority for now
+        if os.path.exists(TpmVM.DEFAULT_TPM_DEVICE_NODE):
+            return CCTrustedApi.TYPE_CC_TPM
         for devpath in TdxVM.DEVICE_NODE_PATH.values():
             if os.path.exists(devpath):
                 return CCTrustedApi.TYPE_CC_TDX
-        if os.path.exists(TpmVM.DEFAULT_TPM_DEVICE_NODE):
-            return CCTrustedApi.TYPE_CC_TPM
         return CCTrustedApi.TYPE_CC_NONE
 
     @abstractmethod

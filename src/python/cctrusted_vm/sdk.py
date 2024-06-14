@@ -135,7 +135,7 @@ class CCTrustedVmSdk(CCTrustedApi):
         self._cvm.process_eventlog()
 
         event_logs = EventLogs(self._cvm.boot_time_event_log, self._cvm.runtime_event_log,
-                               TcgEventLog.TCG_FORMAT_PCCLIENT)
+                               self._cvm.cc_type, TcgEventLog.TCG_FORMAT_PCCLIENT)
 
         event_logs.select(start, count)
 

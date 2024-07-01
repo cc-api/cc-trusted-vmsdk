@@ -108,11 +108,33 @@ $ python3 ./src/python/cc_imr_cli.py
 $ python3 ./src/python/cc_event_log_cli.py
 ```
 
+Extra steps are needed before one trying to get a TPM quote.
+User need to generate their AK themselves and save the context someplace on the machine. Sample commands using [tpm2_tools](https://github.com/tpm2-software/tpm2-tools) are listed here:
+
+```
+# Generate EK (optional if you already have one)
+$ tpm2_createek -c <EK_HANDLE, e.g. 0x8101000A> -G rsa  -u ekpub.pem -f pem
+
+# Generate AK that will be used to sign the TPM quote and save the ak context, public pems, etc.
+# User could change the algorithm according to their need.
+$ tpm2_createak -C <YOUR_EK_HANDLE> -c <PATH_TO_AK_CTX> -G rsa -g sha256 -s rsassa -u akpub.pem -f pem -n akpub.name
+```
+
+After having the ak generated, user could use the command below to generate a TPM quote.
+
+```
+# Specify the pcr_selection you would like to include for the quote and the path to the ak context while running the command
+$ python3 ./src/python/cc_quote_cli.py --pcr-selection <PCR_SELECTION, e.g. "sha256:1,2,10"> --ak-context <PATH_TO_AK_CTX>
+```
+
 - The example output of PCRs (IMR) in a GCP TD as follows:
-![](/docs/gogle_tdx_tpm_dump_imr.png)
+![](/docs/google_tdx_tpm_dump_imr.png)
 
 - The example output of the TPM event log in a GCP TD as follows:
-![](/docs/gogle_tdx_tpm_dump_eventlog.png)
+![](/docs/google_tdx_tpm_dump_eventlog.png)
+
+- The example output of the TPM quote in a GCP TD as follows:
+![](/docs/google_tdx_tpm_dump_quote.png)
 
 ## 5. License
 This project is licensed under the Apache 2.0 License.

@@ -111,6 +111,42 @@ class ConfidentialVM:
                 return CCTrustedApi.TYPE_CC_TDX
         return CCTrustedApi.TYPE_CC_NONE
 
+    @staticmethod
+    def make_report_data(hash_algo, nonce: bytearray, data: bytearray) -> bytes:
+        """
+        Make report data by concatenate nonce and userdata.
+        Support both base64 encoded ones and non-encoded ones.
+
+        Args:
+            hash_algo (hashlib._Hash): the hash algorithm used in report data generation
+            nonce (bytearray): against replay attacks.
+            data (bytearray): user data
+
+        Returns:
+            Bytes containing the report data
+        """
+        if nonce is not None:
+            try:
+                res = base64.b64encode(base64.b64decode(nonce))
+            except base64.binascii.Error:
+                res = ""
+            if res == nonce:
+                hash_algo.update(base64.b64decode(nonce))
+            else:
+                hash_algo.update(bytes(nonce))
+        if data is not None:
+            try:
+                res = base64.b64encode(base64.b64decode(data))
+            except base64.binascii.Error:
+                res = ""
+            if res == data:
+                hash_algo.update(base64.b64decode(data))
+            else:
+                hash_algo.update(bytes(data))
+
+        report_data = hash_algo.digest()
+        return report_data
+
     @abstractmethod
     def process_cc_report(self, report_data=None) -> bool:
         """Process the confidential computing REPORT.
@@ -162,11 +198,7 @@ class ConfidentialVM:
 
         LOG.info("Calculate report data by nonce and user data")
         hash_algo = hashlib.sha512()
-        if nonce is not None:
-            hash_algo.update(bytes(nonce))
-        if data is not None:
-            hash_algo.update(bytes(data))
-        input_data = hash_algo.digest()
+        input_data = ConfidentialVM.make_report_data(hash_algo, nonce, data)
         if extraArgs is not None and isinstance(extraArgs, dict) and \
             "privilege" in extraArgs.keys():
             privilege = extraArgs["privilege"]
@@ -199,9 +231,6 @@ class ConfidentialVM:
                     td_report = outblob_file.read()
             except OSError:
                 LOG.error("Read outblob failed with OSError")
-                return None
-            except:
-                LOG.error("Error in opening outblob file.")
                 return None
 
             # Read provider info
@@ -321,12 +350,6 @@ class TpmVM(ConfidentialVM):
                 "Required params(pcr_selection or ak_context) not provided for quote generation.")
             return None
 
-        # Prepare user defined data which could include nonce
-        if nonce is not None:
-            nonce = base64.b64decode(nonce, validate=True)
-        if data is not None:
-            data = base64.b64decode(data, validate=True)
-
         # the algorithm to concatenate nonce and user data will depend on
         # algorithm defined in the pcr_selection
         algo = extraArgs["pcr_selection"].split(":")[0]
@@ -343,11 +366,7 @@ class TpmVM(ConfidentialVM):
             return None
 
         LOG.info("Calculate report data by nonce and user data")
-        if nonce is not None:
-            hash_algo.update(bytes(nonce))
-        if data is not None:
-            hash_algo.update(bytes(data))
-        input_data = hash_algo.digest()
+        input_data = ConfidentialVM.make_report_data(hash_algo, nonce, data)
 
         # Open attestation key context from file
         if os.path.exists(ak_context_path):
@@ -614,12 +633,6 @@ class TdxVM(ConfidentialVM):
 
         td_report = None
 
-        # Prepare user defined data which could include nonce
-        if nonce is not None:
-            nonce = base64.b64decode(nonce, validate=True)
-        if data is not None:
-            data = base64.b64decode(data, validate=True)
-
         # Check if configfs-tsm has been enabled in kernel
         # if yes, call the super function
         if os.path.exists(ConfidentialVM.tsm_prefix):
@@ -631,13 +644,9 @@ class TdxVM(ConfidentialVM):
         report_bytes = None
         input_data = None
 
-        LOG.info("Calculate report data by nonce and user data")
+        # generate report data
         hash_algo = hashlib.sha512()
-        if nonce is not None:
-            hash_algo.update(bytes(nonce))
-        if data is not None:
-            hash_algo.update(bytes(data))
-        input_data = hash_algo.digest()
+        input_data = ConfidentialVM.make_report_data(hash_algo, nonce, data)
 
         # Check if appropriate qgs vsock port specified in TDX attest config
         # If specified, use vsock to get quote and return TdxQuote object

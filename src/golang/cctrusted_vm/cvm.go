@@ -2,6 +2,7 @@ package vmsdk
 
 import (
 	"crypto/sha512"
+	"encoding/base64"
 	"errors"
 	"os"
 	"path/filepath"
@@ -32,12 +33,24 @@ func (d *GenericDevice) Report(nonce, userData string, extraArgs map[string]any)
 		return cctrusted_base.CcReport{}, errors.New("Configfs TSM is not supported in the current environment.")
 	}
 
+	// concatenate nonce and userData
+	// check if the data is base64 encoded, if yes, decode before doing hash
 	hasher := sha512.New()
 	if nonce != "" {
-		hasher.Write([]byte(nonce))
+		val, err := base64.StdEncoding.DecodeString(nonce)
+		if err != nil {
+			hasher.Write([]byte(nonce))
+		} else {
+			hasher.Write(val)
+		}
 	}
 	if userData != "" {
-		hasher.Write([]byte(userData))
+		val, err := base64.StdEncoding.DecodeString(userData)
+		if err != nil {
+			hasher.Write([]byte(userData))
+		} else {
+			hasher.Write(val)
+		}
 	}
 	reportData := []byte(hasher.Sum(nil))
 

@@ -51,22 +51,25 @@ func (q *QuoteHandler15) TdReport(nonce, userData string) ([tdx.TD_REPORT_LEN]by
 		return tdreport, err
 	}
 
-	// encode nonce and userData
+	// concatenate nonce and userData
+	// check if the data is base64 encoded, if yes, decode before doing hash
 	hasher := sha512.New()
 	if len(nonce) > 0 {
 		nonceDecoded, err := base64.StdEncoding.DecodeString(nonce)
 		if err != nil {
-			return tdreport, err
+			hasher.Write([]byte(nonce))
+		} else {
+			hasher.Write(nonceDecoded)
 		}
-		hasher.Write(nonceDecoded)
 	}
 
 	if len(userData) > 0 {
 		userDataDecoded, err := base64.StdEncoding.DecodeString(userData)
 		if err != nil {
-			return tdreport, err
+			hasher.Write([]byte(userData))
+		} else {
+			hasher.Write(userDataDecoded)
 		}
-		hasher.Write(userDataDecoded)
 	}
 
 	reportData := [64]byte(hasher.Sum(nil))

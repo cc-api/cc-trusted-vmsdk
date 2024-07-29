@@ -1,10 +1,10 @@
 use crate::tdvm::TdxVM;
 use anyhow::*;
-use cctrusted_base::api_data::CcReport;
-use cctrusted_base::cc_type::*;
-use cctrusted_base::tcg::EventLogEntry;
-use cctrusted_base::tcg::{TcgAlgorithmRegistry, TcgDigest};
 use core::result::Result::Ok;
+use evidence_api::api_data::CcReport;
+use evidence_api::cc_type::*;
+use evidence_api::tcg::EventLogEntry;
+use evidence_api::tcg::{TcgAlgorithmRegistry, TcgDigest};
 use sha2::{Digest, Sha512};
 use std::{env, fs, path::Path};
 use tempfile::tempdir_in;

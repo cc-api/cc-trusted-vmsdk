@@ -1,8 +1,8 @@
 """Containing unit test cases for sdk class"""
 
-from cctrusted_base.ccreport import CcReport, CcReportData, CcReportSignature
-from cctrusted_base.tcg import TcgImrEvent, TcgPcClientImrEvent
-from cctrusted_base.tcgcel import TcgTpmsCelEvent
+from evidence_api.ccreport import CcReport, CcReportData, CcReportSignature
+from evidence_api.tcg import TcgImrEvent, TcgPcClientImrEvent
+from evidence_api.tcgcel import TcgTpmsCelEvent
 import pytest
 
 def test_get_default_algorithms(vm_sdk, default_alg_id):

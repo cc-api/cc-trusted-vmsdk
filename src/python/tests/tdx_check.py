@@ -6,11 +6,11 @@ import logging
 import os
 import random
 import pytest
-from cctrusted_base.api import CCTrustedApi
-from cctrusted_base.eventlog import EventLogs
-from cctrusted_base.tcg import TcgAlgorithmRegistry
-from cctrusted_base.tdx.quote import TdxQuote, TdxQuoteBody
-from cctrusted_base.tdx.rtmr import TdxRTMR
+from evidence_api.api import EvidenceApi
+from evidence_api.eventlog import EventLogs
+from evidence_api.tcg import TcgAlgorithmRegistry
+from evidence_api.tdx.quote import TdxQuote, TdxQuoteBody
+from evidence_api.tdx.rtmr import TdxRTMR
 from cctrusted_vm.sdk import CCTrustedVmSdk
 
 LOG = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ def _replay_eventlog():
     rtmrs = [bytearray(rtmr_len)] * rtmr_cnt
     event_logs = CCTrustedVmSdk.inst().get_cc_eventlog()
     assert event_logs is not None
-    rtmrs = CCTrustedApi.replay_cc_eventlog(event_logs)
+    rtmrs = EvidenceApi.replay_cc_eventlog(event_logs)
     return rtmrs
 
 def _check_imr(imr_index: int, alg_id: int, rtmr: bytes):
@@ -134,7 +134,7 @@ def _check_quote_rtmrs(quote):
 def _check_quote_reportdata(quote, nonce=None, userdata=None):
     """Check the userdata in quote result."""
     assert quote is not None and isinstance(quote, TdxQuote)
-    assert quote.cc_type == CCTrustedApi.TYPE_CC_TDX
+    assert quote.cc_type == EvidenceApi.TYPE_CC_TDX
     body = quote.body
     assert body is not None and isinstance(body, TdxQuoteBody)
     out_data = body.reportdata
@@ -248,6 +248,6 @@ def tdx_check_replay_eventlog_with_invalid_input():
 
     # Check the replay result when input invalid eventlog.
     invalid_eventlog = _gen_invalid_eventlog()
-    replay_result = CCTrustedApi.replay_cc_eventlog(invalid_eventlog.event_logs)
+    replay_result = EvidenceApi.replay_cc_eventlog(invalid_eventlog.event_logs)
     assert replay_result is not None
     assert 0 == len(replay_result)

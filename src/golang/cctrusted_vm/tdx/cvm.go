@@ -3,8 +3,8 @@ package tdx
 import (
 	cctrusted_vm "github.com/cc-api/cc-trusted-vmsdk/src/golang/cctrusted_vm"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base"
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base/tdx"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api/tdx"
 )
 
 var _ cctrusted_vm.ConfidentialVM = (*TdxVM)(nil)
@@ -12,13 +12,13 @@ var _ cctrusted_vm.ConfidentialVM = (*TdxVM)(nil)
 type TdxVM struct {
 	cctrusted_vm.Device
 	cctrusted_vm.EventRecorder
-	cctrusted_base.IMARecorder
+	evidence_api.IMARecorder
 }
 
 func NewTdxVM(args *cctrusted_vm.CVMInitArgs) *TdxVM {
 	vm := &TdxVM{
 		Device:      &TDXDevice{},
-		IMARecorder: &cctrusted_base.DefaultIMARecorder{},
+		IMARecorder: &evidence_api.DefaultIMARecorder{},
 	}
 	r := &TDXEventLogRecorder{}
 	if args != nil {
@@ -34,8 +34,8 @@ func NewTdxVM(args *cctrusted_vm.CVMInitArgs) *TdxVM {
 }
 
 // DefaultAlgorithm implements cctrusted_vm.ConfidentialVM.
-func (t *TdxVM) DefaultAlgorithm() cctrusted_base.TCG_ALG {
-	return cctrusted_base.TPM_ALG_SHA384
+func (t *TdxVM) DefaultAlgorithm() evidence_api.TCG_ALG {
+	return evidence_api.TPM_ALG_SHA384
 }
 
 // MaxImrIndex implements cctrusted_vm.ConfidentialVM.

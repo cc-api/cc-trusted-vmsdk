@@ -4,9 +4,9 @@ import (
 	"errors"
 	"os"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base/tdx"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api/tdx"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api"
 
 	cctrusted_vm "github.com/cc-api/cc-trusted-vmsdk/src/golang/cctrusted_vm"
 )
@@ -20,13 +20,13 @@ type TDXDevice struct {
 }
 
 // Version implements cctrusted_vm.Device.
-func (t *TDXDevice) Version() cctrusted_base.DeviceVersion {
+func (t *TDXDevice) Version() evidence_api.DeviceVersion {
 	return t.spec.Version
 }
 
 // CCType implements cctrusted_vm.Device.
-func (t *TDXDevice) CCType() cctrusted_base.CC_Type {
-	return cctrusted_base.TYPE_CC_TDX
+func (t *TDXDevice) CCType() evidence_api.CC_Type {
+	return evidence_api.TYPE_CC_TDX
 }
 
 // Name implements cctrusted_vm.Device.
@@ -62,8 +62,8 @@ func (t *TDXDevice) initDevice() error {
 }
 
 // Report implements cctrusted_vm.Device, get CC report
-func (t *TDXDevice) Report(nonce, userData string, extraArgs map[string]any) (cctrusted_base.CcReport, error) {
-	var resp cctrusted_base.CcReport
+func (t *TDXDevice) Report(nonce, userData string, extraArgs map[string]any) (evidence_api.CcReport, error) {
+	var resp evidence_api.CcReport
 	var err error
 
 	// call parent Report() func to retrieve cc report using Configfs-tsm
@@ -75,15 +75,15 @@ func (t *TDXDevice) Report(nonce, userData string, extraArgs map[string]any) (cc
 	// get tdx report
 	tdreport, err := t.TdReport(nonce, userData)
 	if err != nil {
-		return cctrusted_base.CcReport{}, err
+		return evidence_api.CcReport{}, err
 	}
 	// get tdx quote, aka. CC report
 	quote, err := t.Quote(tdreport)
 	if err != nil {
-		return cctrusted_base.CcReport{}, err
+		return evidence_api.CcReport{}, err
 	}
 
-	resp = cctrusted_base.CcReport{
+	resp = evidence_api.CcReport{
 		Outblob: quote,
 	}
 

@@ -1,5 +1,5 @@
-github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base v0.0.0-20240418131523-3b0ab7d9578e h1:oKNunMQImCfmcSAARhpgPHKgs0bln70tIBETaV/8LVw=
-github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base v0.0.0-20240418131523-3b0ab7d9578e/go.mod h1:0rggJ3Z7AxSCbOfi2PBO98sAftWWsI39V7v/aG9xPmQ=
+github.com/cc-api/evidence-api/common/golang/evidence_api v0.0.0-20240729064808-21e12aa810c8 h1:IjmvJTssPaDuC/qkSDaLFv6u+9MFFH+nmTr4Duj6KhM=
+github.com/cc-api/evidence-api/common/golang/evidence_api v0.0.0-20240729064808-21e12aa810c8/go.mod h1:R1LPex62L4Ftnnw5vWp5sFNI5j8tnHtf0oQKvLvm9Pw=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

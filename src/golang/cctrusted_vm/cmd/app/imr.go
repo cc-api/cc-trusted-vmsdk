@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"log"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api"
 
 	"github.com/spf13/cobra"
 )
@@ -25,7 +25,7 @@ var imrCmd = &cobra.Command{
 		group := report.IMRGroup()
 		l := log.Default()
 		l.Printf("Measurement Count: %d\n", group.MaxIndex+1)
-		alg := cctrusted_base.GetDefaultTPMAlg()
+		alg := evidence_api.GetDefaultTPMAlg()
 		for index, digest := range group.Group {
 			l.Printf("Index: %v\n", index)
 			l.Printf("Algorithms: %v\n", alg)

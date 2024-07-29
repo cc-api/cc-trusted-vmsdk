@@ -4,20 +4,20 @@ The VMSDK implementation for ``CCTrusted`` API.
 import logging
 
 # pylint: disable=unused-import
-from cctrusted_base.api import CCTrustedApi
-from cctrusted_base.imr import TcgIMR
-from cctrusted_base.ccreport import CcReport
-from cctrusted_base.eventlog import EventLogs
-from cctrusted_base.eventlog import TcgEventLog
-from cctrusted_base.tcg import TcgAlgorithmRegistry
+from evidence_api.api import EvidenceApi
+from evidence_api.imr import TcgIMR
+from evidence_api.ccreport import CcReport
+from evidence_api.eventlog import EventLogs
+from evidence_api.eventlog import TcgEventLog
+from evidence_api.tcg import TcgAlgorithmRegistry
 from cctrusted_vm.cvm import ConfidentialVM
 
 
 LOG = logging.getLogger(__name__)
 
-class CCTrustedVmSdk(CCTrustedApi):
+class CCTrustedVmSdk(EvidenceApi):
 
-    """CC trusted API implementation for a general CVM."""
+    """Evidence API implementation for a general CVM."""
 
     _inst = None
 

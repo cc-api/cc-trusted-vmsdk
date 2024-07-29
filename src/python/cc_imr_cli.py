@@ -4,7 +4,7 @@ Command line to dump the integrated measurement register
 """
 import logging
 import os
-from cctrusted_base.api import CCTrustedApi
+from evidence_api.api import EvidenceApi
 from cctrusted_vm.cvm import ConfidentialVM
 from cctrusted_vm.sdk import CCTrustedVmSdk
 
@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.NOTSET, format='%(name)s %(levelname)-8s %(mes
 
 def main():
     """Example to call get_cc_measurement and dump the result to stdout."""
-    if ConfidentialVM.detect_cc_type() == CCTrustedApi.TYPE_CC_NONE:
+    if ConfidentialVM.detect_cc_type() == EvidenceApi.TYPE_CC_NONE:
         LOG.error("This is not a confidential VM!")
         return
     if os.geteuid() != 0:

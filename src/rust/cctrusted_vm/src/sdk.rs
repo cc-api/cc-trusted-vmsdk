@@ -2,17 +2,17 @@ use anyhow::*;
 use core::result::Result;
 use core::result::Result::Ok;
 
-use cctrusted_base::binary_blob::dump_data;
-use cctrusted_base::tcg::{EventLogEntry, TcgDigest, ALGO_NAME_MAP};
+use evidence_api::binary_blob::dump_data;
+use evidence_api::tcg::{EventLogEntry, TcgDigest, ALGO_NAME_MAP};
 
 use crate::cvm::build_cvm;
-use cctrusted_base::api::*;
-use cctrusted_base::api_data::*;
+use evidence_api::api::*;
+use evidence_api::api_data::*;
 
 pub struct API {}
 
-impl CCTrustedApi for API {
-    // CCTrustedApi trait function: get report of a CVM
+impl EvidenceApi for API {
+    // EvidenceApi trait function: get report of a CVM
     fn get_cc_report(
         nonce: Option<String>,
         data: Option<String>,
@@ -28,12 +28,12 @@ impl CCTrustedApi for API {
         }
     }
 
-    // CCTrustedApi trait function: dump report of a CVM in hex and char format
+    // EvidenceApi trait function: dump report of a CVM in hex and char format
     fn dump_cc_report(report: &Vec<u8>) {
         dump_data(report)
     }
 
-    // CCTrustedApi trait function: get max number of CVM IMRs
+    // EvidenceApi trait function: get max number of CVM IMRs
     fn get_measurement_count() -> Result<u8, anyhow::Error> {
         match build_cvm() {
             Ok(cvm) => Ok(cvm.get_max_index() + 1),
@@ -41,7 +41,7 @@ impl CCTrustedApi for API {
         }
     }
 
-    // CCTrustedApi trait function: get measurements of a CVM
+    // EvidenceApi trait function: get measurements of a CVM
     fn get_cc_measurement(index: u8, algo_id: u16) -> Result<TcgDigest, anyhow::Error> {
         match build_cvm() {
             Ok(mut cvm) => cvm.process_cc_measurement(index, algo_id),
@@ -49,7 +49,7 @@ impl CCTrustedApi for API {
         }
     }
 
-    // CCTrustedApi trait function: get eventlogs of a CVM
+    // EvidenceApi trait function: get eventlogs of a CVM
     fn get_cc_eventlog(
         start: Option<u32>,
         count: Option<u32>,
@@ -60,7 +60,7 @@ impl CCTrustedApi for API {
         }
     }
 
-    // CCTrustedApi trait function: get default algorithm of a CVM
+    // EvidenceApi trait function: get default algorithm of a CVM
     fn get_default_algorithm() -> Result<Algorithm, anyhow::Error> {
         match build_cvm() {
             Ok(cvm) => {
@@ -83,12 +83,12 @@ impl CCTrustedApi for API {
 mod sdk_api_tests {
     use super::*;
     use crate::cvm::get_cvm_type;
-    use cctrusted_base::cc_type::TeeType;
-    use cctrusted_base::tcg::{TPM_ALG_SHA256, TPM_ALG_SHA384};
-    use cctrusted_base::tdx::common::{
+    use evidence_api::cc_type::TeeType;
+    use evidence_api::tcg::{TPM_ALG_SHA256, TPM_ALG_SHA384};
+    use evidence_api::tdx::common::{
         AttestationKeyType, IntelTeeType, QeCertDataType, Tdx, QE_VENDOR_INTEL_SGX,
     };
-    use cctrusted_base::tdx::quote::TdxQuote;
+    use evidence_api::tdx::quote::TdxQuote;
     use rand::Rng;
 
     fn _check_imr(imr_index: u8, algo: u16, digest: &Vec<u8>) {
@@ -160,7 +160,7 @@ mod sdk_api_tests {
         }
     }
 
-    // test on cc trusted API [get_cc_report]
+    // test on Evidence API [get_cc_report]
     #[test]
     fn test_get_cc_report() {
         let nonce = base64::encode(rand::thread_rng().gen::<[u8; 32]>());
@@ -284,7 +284,7 @@ mod sdk_api_tests {
         };
     }
 
-    // test on cc trusted API [get_default_algorithm]
+    // test on Evidence API [get_default_algorithm]
     #[test]
     fn test_get_default_algorithm() {
         let defalt_algo = match API::get_default_algorithm() {
@@ -300,7 +300,7 @@ mod sdk_api_tests {
         }
     }
 
-    // test on cc trusted API [get_measurement_count]
+    // test on Evidence API [get_measurement_count]
     #[test]
     fn test_get_measurement_count() {
         let count = match API::get_measurement_count() {
@@ -316,7 +316,7 @@ mod sdk_api_tests {
         }
     }
 
-    // test on cc trusted API [get_cc_measurement]
+    // test on Evidence API [get_cc_measurement]
     #[test]
     fn test_get_cc_measurement() {
         let count = match API::get_measurement_count() {
@@ -396,7 +396,7 @@ mod sdk_api_tests {
         }
     }
 
-    // test on cc trusted API [parse_cc_report]
+    // test on Evidence API [parse_cc_report]
     #[test]
     fn test_parse_cc_report() {
         let nonce = base64::encode(rand::thread_rng().gen::<[u8; 32]>());
@@ -462,7 +462,7 @@ mod sdk_api_tests {
         }
     }
 
-    // test on cc trusted API [get_cc_eventlog]
+    // test on Evidence API [get_cc_eventlog]
     #[test]
     fn test_get_cc_eventlog_start_count_normal() {
         let event_logs = match API::get_cc_eventlog(Some(0), Some(10)) {

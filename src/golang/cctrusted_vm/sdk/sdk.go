@@ -9,34 +9,34 @@ import (
 	cctrusted_vm "github.com/cc-api/cc-trusted-vmsdk/src/golang/cctrusted_vm"
 	_ "github.com/cc-api/cc-trusted-vmsdk/src/golang/cctrusted_vm/tdx"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base"
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base/tdx"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api/tdx"
 )
 
-var _ cctrusted_base.CCTrustedAPI = (*SDK)(nil)
+var _ evidence_api.EvidenceAPI = (*SDK)(nil)
 
 type SDK struct {
 	cvm cctrusted_vm.ConfidentialVM
 }
 
-// DumpCCReport implements cctrusted_base.CCTrustedAPI.
+// DumpCCReport implements evidence_api.EvidenceAPI.
 func (s *SDK) DumpCCReport(reportBytes []byte) error {
 	vmCtx := s.cvm.CVMContext()
 	switch vmCtx.VMType {
-	case cctrusted_base.TYPE_CC_TDX:
+	case evidence_api.TYPE_CC_TDX:
 		report, err := tdx.NewTdxReportFromBytes(reportBytes)
 		if err != nil {
 			return err
 		}
-		report.Dump(cctrusted_base.QuoteDumpFormatHuman)
+		report.Dump(evidence_api.QuoteDumpFormatHuman)
 	default:
 	}
 	return nil
 }
 
-// GetCCMeasurement implements cctrusted_base.CCTrustedAPI.
-func (s *SDK) GetCCMeasurement(index int, alg cctrusted_base.TCG_ALG) (cctrusted_base.TcgDigest, error) {
-	emptyRet := cctrusted_base.TcgDigest{}
+// GetCCMeasurement implements evidence_api.EvidenceAPI.
+func (s *SDK) GetCCMeasurement(index int, alg evidence_api.TCG_ALG) (evidence_api.TcgDigest, error) {
+	emptyRet := evidence_api.TcgDigest{}
 	report, err := s.GetCCReport("", "", nil)
 	if err != nil {
 		return emptyRet, err
@@ -52,23 +52,23 @@ func (s *SDK) GetCCMeasurement(index int, alg cctrusted_base.TCG_ALG) (cctrusted
 	return entry, nil
 }
 
-// GetMeasurementCount implements cctrusted_base.CCTrustedAPI.
+// GetMeasurementCount implements evidence_api.EvidenceAPI.
 func (s *SDK) GetMeasurementCount() (int, error) {
 	return s.cvm.MaxImrIndex() + 1, nil
 }
 
-// ReplayCCEventLog implements cctrusted_base.CCTrustedAPI.
-func (s *SDK) ReplayCCEventLog(formatedEventLogs []cctrusted_base.FormatedTcgEvent) map[int]map[cctrusted_base.TCG_ALG][]byte {
-	return cctrusted_base.ReplayFormatedEventLog(formatedEventLogs)
+// ReplayCCEventLog implements evidence_api.EvidenceAPI.
+func (s *SDK) ReplayCCEventLog(formatedEventLogs []evidence_api.FormatedTcgEvent) map[int]map[evidence_api.TCG_ALG][]byte {
+	return evidence_api.ReplayFormatedEventLog(formatedEventLogs)
 }
 
-// GetDefaultAlgorithm implements cctrusted_base.CCTrustedAPI.
-func (s *SDK) GetDefaultAlgorithm() (cctrusted_base.TCG_ALG, error) {
+// GetDefaultAlgorithm implements evidence_api.EvidenceAPI.
+func (s *SDK) GetDefaultAlgorithm() (evidence_api.TCG_ALG, error) {
 	return s.cvm.DefaultAlgorithm(), nil
 }
 
-// SelectEventlog implements CCTrustedAPI.
-func (s *SDK) GetCCEventLog(params ...int32) ([]cctrusted_base.FormatedTcgEvent, error) {
+// SelectEventlog implements EvidenceAPI.
+func (s *SDK) GetCCEventLog(params ...int32) ([]evidence_api.FormatedTcgEvent, error) {
 	el, err := s.internelEventlog()
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (s *SDK) GetCCEventLog(params ...int32) ([]cctrusted_base.FormatedTcgEvent,
 	return el.EventLog(), nil
 }
 
-func (s *SDK) internelEventlog() (*cctrusted_base.EventLogger, error) {
+func (s *SDK) internelEventlog() (*evidence_api.EventLogger, error) {
 	if s.cvm == nil {
 		return nil, errors.New("no available cvm in sdk")
 	}
@@ -116,12 +116,12 @@ func (s *SDK) internelEventlog() (*cctrusted_base.EventLogger, error) {
 		return nil, err
 	}
 
-	el := cctrusted_base.NewEventLogger(eventLogBytes, imaLogBytes, cctrusted_base.TCG_PCCLIENT_FORMAT)
+	el := evidence_api.NewEventLogger(eventLogBytes, imaLogBytes, evidence_api.TCG_PCCLIENT_FORMAT)
 	return el, nil
 }
 
-// Report implements CCTrustedAPI.
-func (s *SDK) GetCCReport(nonce, userData string, extraArgs map[string]any) (cctrusted_base.Report, error) {
+// Report implements EvidenceAPI.
+func (s *SDK) GetCCReport(nonce, userData string, extraArgs map[string]any) (evidence_api.Report, error) {
 	if s.cvm == nil {
 		return nil, errors.New("no available cvm in sdk")
 	}
@@ -133,7 +133,7 @@ func (s *SDK) GetCCReport(nonce, userData string, extraArgs map[string]any) (cct
 
 	vmCtx := s.cvm.CVMContext()
 	switch vmCtx.VMType {
-	case cctrusted_base.TYPE_CC_TDX:
+	case evidence_api.TYPE_CC_TDX:
 		report, err := tdx.NewTdxReportFromBytes(reportStruct.Outblob)
 		if err != nil {
 			return nil, err

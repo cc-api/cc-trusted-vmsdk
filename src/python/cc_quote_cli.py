@@ -6,7 +6,7 @@ import base64
 import logging
 import os
 import random
-from cctrusted_base.api import CCTrustedApi
+from evidence_api.api import EvidenceApi
 from cctrusted_vm.cvm import ConfidentialVM
 from cctrusted_vm.sdk import CCTrustedVmSdk
 
@@ -55,7 +55,7 @@ def make_userdata():
 
 def main():
     """Example to call get_cc_report and dump the result to stdout."""
-    if ConfidentialVM.detect_cc_type() == CCTrustedApi.TYPE_CC_NONE:
+    if ConfidentialVM.detect_cc_type() == EvidenceApi.TYPE_CC_NONE:
         LOG.error("This is not a confidential VM!")
         return
     if os.geteuid() != 0:
@@ -89,7 +89,7 @@ def main():
     extra_args["pcr_selection"] = args.pcr_selection
     extra_args["ak_context"] = args.ak_context
 
-    if ConfidentialVM.detect_cc_type() == CCTrustedApi.TYPE_CC_TPM:
+    if ConfidentialVM.detect_cc_type() == EvidenceApi.TYPE_CC_TPM:
         quote = CCTrustedVmSdk.inst().get_cc_report(nonce, userdata, extra_args)
     else:
         quote = CCTrustedVmSdk.inst().get_cc_report(nonce, userdata)

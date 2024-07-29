@@ -6,7 +6,7 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api"
 
 	"github.com/spf13/cobra"
 )
@@ -26,7 +26,7 @@ var reportCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		report.Dump(cctrusted_base.QuoteDumpFormat(FlagFormat))
+		report.Dump(evidence_api.QuoteDumpFormat(FlagFormat))
 		return nil
 	},
 }

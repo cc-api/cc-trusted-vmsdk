@@ -4,10 +4,10 @@ Command line to dump the cc event logs
 import logging
 import argparse
 import os
-from cctrusted_base.api import CCTrustedApi
-from cctrusted_base.eventlog import TcgEventLog
-from cctrusted_base.tcgcel import TcgTpmsCelEvent
-from cctrusted_base.tcg import TcgAlgorithmRegistry
+from evidence_api.api import EvidenceApi
+from evidence_api.eventlog import TcgEventLog
+from evidence_api.tcgcel import TcgTpmsCelEvent
+from evidence_api.tcg import TcgAlgorithmRegistry
 from cctrusted_vm.cvm import ConfidentialVM
 from cctrusted_vm.sdk import CCTrustedVmSdk
 
@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.NOTSET, format='%(name)s %(levelname)-8s %(mes
 
 def main():
     """Example cc event log fetching utility."""
-    if ConfidentialVM.detect_cc_type() == CCTrustedApi.TYPE_CC_NONE:
+    if ConfidentialVM.detect_cc_type() == EvidenceApi.TYPE_CC_NONE:
         LOG.error("This is not a confidential VM!")
         return
     if os.geteuid() != 0:
@@ -41,7 +41,7 @@ def main():
         return
     LOG.info("Total %d of event logs fetched.", len(event_logs))
 
-    res = CCTrustedApi.replay_cc_eventlog(event_logs)
+    res = EvidenceApi.replay_cc_eventlog(event_logs)
     # pylint: disable-next=C0301
     LOG.info("Note: If the underlying platform is TDX, the IMR index showing is cc measurement register instead of TDX measurement register.")
     # pylint: disable-next=C0301

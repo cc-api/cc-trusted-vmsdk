@@ -1,11 +1,11 @@
 
-# SDK for CC Trusted API in Confidential VM
+# SDK for Evidence API in Confidential VM
 
 In confidential VM, the trusted primitives (measurement, eventlog, quote) normally
 can be accessed via device node like /dev/tpm0, sysfs etc, and different vendor
 may provides the different definitions. 
 
-This VMSDK following the CC Trusted API design
+This VMSDK following the Evidence API design
 shields the difference introduced by the platform and provides user with unified usage
 in the confidential virtual machine environments.
 

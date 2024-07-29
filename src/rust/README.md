@@ -1,6 +1,6 @@
-# Rust SDK for CC Trusted API in Confidential VM
+# Rust SDK for Evidence API in Confidential VM
 
-This is the Rust version of our VM SDK to help you using the CC Trusted API in your Rust programs. The sub folder "cctrusted_vm" include all the source code for the VMSDK. The sub folder "sample" includes some commandline examples for your reference.
+This is the Rust version of our VM SDK to help you using the Evidence API in your Rust programs. The sub folder "cctrusted_vm" include all the source code for the VMSDK. The sub folder "sample" includes some commandline examples for your reference.
 
 # Run CLI Samples
 

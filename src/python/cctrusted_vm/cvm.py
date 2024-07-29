@@ -15,16 +15,16 @@ import fcntl
 import socket
 import tempfile
 from abc import abstractmethod
-from cctrusted_base.api import CCTrustedApi
-from cctrusted_base.imr import TcgIMR
-from cctrusted_base.ccreport import CcReport
-from cctrusted_base.tcg import TcgAlgorithmRegistry
-from cctrusted_base.tdx.common import TDX_VERSION_1_0, TDX_VERSION_1_5
-from cctrusted_base.tdx.rtmr import TdxRTMR
-from cctrusted_base.tdx.quote import TdxQuoteReq10, TdxQuoteReq15, TdxQuote, TdxQuoteReq
-from cctrusted_base.tpm.pcr import TpmPCR
-from cctrusted_base.tpm.quote import Tpm2Quote
-from cctrusted_base.tdx.report import TdxReportReq10, TdxReportReq15
+from evidence_api.api import EvidenceApi
+from evidence_api.imr import TcgIMR
+from evidence_api.ccreport import CcReport
+from evidence_api.tcg import TcgAlgorithmRegistry
+from evidence_api.tdx.common import TDX_VERSION_1_0, TDX_VERSION_1_5
+from evidence_api.tdx.rtmr import TdxRTMR
+from evidence_api.tdx.quote import TdxQuoteReq10, TdxQuoteReq15, TdxQuote, TdxQuoteReq
+from evidence_api.tpm.pcr import TpmPCR
+from evidence_api.tpm.quote import Tpm2Quote
+from evidence_api.tdx.report import TdxReportReq10, TdxReportReq15
 from tpm2_pytss import ESAPI
 from tpm2_pytss.types import TPML_PCR_SELECTION, TPMS_CONTEXT, TPM2B_DATA
 
@@ -69,7 +69,7 @@ class ConfidentialVM:
     @property
     def cc_type_str(self):
         """the CC type string."""
-        return CCTrustedApi.cc_type_str[self.cc_type]
+        return EvidenceApi.cc_type_str[self.cc_type]
 
     @property
     def boot_time_event_log(self):
@@ -105,11 +105,11 @@ class ConfidentialVM:
         #TODO: refine the justification
         # support TPM as the first priority for now
         if os.path.exists(TpmVM.DEFAULT_TPM_DEVICE_NODE):
-            return CCTrustedApi.TYPE_CC_TPM
+            return EvidenceApi.TYPE_CC_TPM
         for devpath in TdxVM.DEVICE_NODE_PATH.values():
             if os.path.exists(devpath):
-                return CCTrustedApi.TYPE_CC_TDX
-        return CCTrustedApi.TYPE_CC_NONE
+                return EvidenceApi.TYPE_CC_TDX
+        return EvidenceApi.TYPE_CC_NONE
 
     @staticmethod
     def make_report_data(hash_algo, nonce: bytearray, data: bytearray) -> bytes:
@@ -186,7 +186,7 @@ class ConfidentialVM:
             The ``CcReport`` object.
         """
         # In tpm case, skip get report through configfs-tsm
-        if self.cc_type == CCTrustedApi.TYPE_CC_TPM:
+        if self.cc_type == EvidenceApi.TYPE_CC_TPM:
             return None
 
         if not os.path.exists(self.tsm_prefix):
@@ -272,9 +272,9 @@ class ConfidentialVM:
         if ConfidentialVM._inst is None:
             obj = None
             cc_type = ConfidentialVM.detect_cc_type()
-            if cc_type is CCTrustedApi.TYPE_CC_TDX:
+            if cc_type is EvidenceApi.TYPE_CC_TDX:
                 obj = TdxVM()
-            elif cc_type is CCTrustedApi.TYPE_CC_TPM:
+            elif cc_type is EvidenceApi.TYPE_CC_TPM:
                 obj = TpmVM()
             else:
                 LOG.error("Unsupported confidential environment.")
@@ -292,7 +292,7 @@ class TpmVM(ConfidentialVM):
     BIOS_MEAUSREMENT="/sys/kernel/security/tpm0/binary_bios_measurements"
 
     def __init__(self, dev_node=DEFAULT_TPM_DEVICE_NODE):
-        ConfidentialVM.__init__(self, CCTrustedApi.TYPE_CC_TPM)
+        ConfidentialVM.__init__(self, EvidenceApi.TYPE_CC_TPM)
         self._dev_node = dev_node
         self._esapi = ESAPI("device:" + dev_node)
 
@@ -387,7 +387,7 @@ class TpmVM(ConfidentialVM):
         self._esapi.flush_context(ak_handle)
 
         # Save the tpm quote
-        structured_quote = Tpm2Quote(None, CCTrustedApi.TYPE_CC_TPM)
+        structured_quote = Tpm2Quote(None, EvidenceApi.TYPE_CC_TPM)
         structured_quote.set_quoted_data(quote)
         structured_quote.set_sig(signature)
         return structured_quote
@@ -449,7 +449,7 @@ class TdxVM(ConfidentialVM):
     CFG_FILE_PATH = "/etc/tdx-attest.conf"
 
     def __init__(self):
-        ConfidentialVM.__init__(self, CCTrustedApi.TYPE_CC_TDX)
+        ConfidentialVM.__init__(self, EvidenceApi.TYPE_CC_TDX)
         self._version:str = None
         self._tdreport = None
         self._config:dict = self._load_config()

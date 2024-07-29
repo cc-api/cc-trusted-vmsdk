@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api"
 )
 
 const (
@@ -17,20 +17,20 @@ const (
 
 type Device interface {
 	ProbeDevice() error
-	Report(nonce, userData string, extraArgs map[string]any) (cctrusted_base.CcReport, error)
+	Report(nonce, userData string, extraArgs map[string]any) (evidence_api.CcReport, error)
 	Name() string
-	CCType() cctrusted_base.CC_Type
-	Version() cctrusted_base.DeviceVersion
+	CCType() evidence_api.CC_Type
+	Version() evidence_api.DeviceVersion
 }
 
 type GenericDevice struct {
 	Device
 }
 
-func (d *GenericDevice) Report(nonce, userData string, extraArgs map[string]any) (cctrusted_base.CcReport, error) {
+func (d *GenericDevice) Report(nonce, userData string, extraArgs map[string]any) (evidence_api.CcReport, error) {
 	var err error
 	if _, err = os.Stat(TSM_PREFIX); os.IsNotExist(err) {
-		return cctrusted_base.CcReport{}, errors.New("Configfs TSM is not supported in the current environment.")
+		return evidence_api.CcReport{}, errors.New("Configfs TSM is not supported in the current environment.")
 	}
 
 	// concatenate nonce and userData
@@ -56,14 +56,14 @@ func (d *GenericDevice) Report(nonce, userData string, extraArgs map[string]any)
 
 	tempdir, err := os.MkdirTemp(TSM_PREFIX, "report_")
 	if err != nil {
-		return cctrusted_base.CcReport{}, errors.New("Failed to init entry in Configfs TSM.")
+		return evidence_api.CcReport{}, errors.New("Failed to init entry in Configfs TSM.")
 	}
 	defer os.RemoveAll(tempdir)
 
 	if _, err = os.Stat(filepath.Join(tempdir, "inblob")); !os.IsNotExist(err) {
 		err = os.WriteFile(filepath.Join(tempdir, "inblob"), reportData, 0400)
 		if err != nil {
-			return cctrusted_base.CcReport{}, errors.New("Failed to push report data into inblob.")
+			return evidence_api.CcReport{}, errors.New("Failed to push report data into inblob.")
 		}
 	}
 
@@ -71,7 +71,7 @@ func (d *GenericDevice) Report(nonce, userData string, extraArgs map[string]any)
 		if val, ok := v.(int); ok {
 			err = os.WriteFile(filepath.Join(tempdir, "privlevel"), []byte(strconv.Itoa(val)), 0400)
 			if err != nil {
-				return cctrusted_base.CcReport{}, errors.New("Failed to push privilege data to privlevel file.")
+				return evidence_api.CcReport{}, errors.New("Failed to push privilege data to privlevel file.")
 			}
 		}
 	}
@@ -81,37 +81,37 @@ func (d *GenericDevice) Report(nonce, userData string, extraArgs map[string]any)
 	if _, err = os.Stat(filepath.Join(tempdir, "outblob")); !os.IsNotExist(err) {
 		outblob, err = os.ReadFile(filepath.Join(tempdir, "outblob"))
 		if err != nil {
-			return cctrusted_base.CcReport{}, errors.New("Failed to get outblob.")
+			return evidence_api.CcReport{}, errors.New("Failed to get outblob.")
 		}
 	}
 
 	if _, err = os.Stat(filepath.Join(tempdir, "generation")); !os.IsNotExist(err) {
 		rawGeneration, err := os.ReadFile(filepath.Join(tempdir, "generation"))
 		if err != nil {
-			return cctrusted_base.CcReport{}, errors.New("Failed to get generation info.")
+			return evidence_api.CcReport{}, errors.New("Failed to get generation info.")
 		}
 		generation, _ = strconv.Atoi(string(rawGeneration))
 		// Check if the outblob has been corrupted during file open
 		if generation > 1 {
-			return cctrusted_base.CcReport{}, errors.New("Found corrupted generation.")
+			return evidence_api.CcReport{}, errors.New("Found corrupted generation.")
 		}
 	}
 
 	if _, err = os.Stat(filepath.Join(tempdir, "provider")); !os.IsNotExist(err) {
 		provider, err = os.ReadFile(filepath.Join(tempdir, "provider"))
 		if err != nil {
-			return cctrusted_base.CcReport{}, errors.New("Failed to get provider info.")
+			return evidence_api.CcReport{}, errors.New("Failed to get provider info.")
 		}
 	}
 
 	if _, err = os.Stat(filepath.Join(tempdir, "auxblob")); !os.IsNotExist(err) {
 		auxblob, err = os.ReadFile(filepath.Join(tempdir, "auxblob"))
 		if err != nil {
-			return cctrusted_base.CcReport{}, errors.New("Failed to get auxblob info.")
+			return evidence_api.CcReport{}, errors.New("Failed to get auxblob info.")
 		}
 	}
 
-	return cctrusted_base.CcReport{
+	return evidence_api.CcReport{
 		Outblob:    outblob,
 		Provider:   string(provider),
 		Generation: generation,
@@ -125,18 +125,18 @@ type EventRecorder interface {
 }
 
 type CVMContext struct {
-	VMType  cctrusted_base.CC_Type
-	Version cctrusted_base.DeviceVersion
+	VMType  evidence_api.CC_Type
+	Version evidence_api.DeviceVersion
 }
 
 type ConfidentialVM interface {
 	Probe() error
 	CVMContext() CVMContext
 	MaxImrIndex() int
-	DefaultAlgorithm() cctrusted_base.TCG_ALG
+	DefaultAlgorithm() evidence_api.TCG_ALG
 	Device
 	EventRecorder
-	cctrusted_base.IMARecorder
+	evidence_api.IMARecorder
 }
 
 type CVMInitArgs struct {

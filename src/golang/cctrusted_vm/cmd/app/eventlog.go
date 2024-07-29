@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"log"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api"
 
 	"github.com/spf13/cobra"
 )
@@ -65,7 +65,7 @@ var eventLogReplayCmd = &cobra.Command{
 	},
 }
 
-func filterEventLog() ([]cctrusted_base.FormatedTcgEvent, error) {
+func filterEventLog() ([]evidence_api.FormatedTcgEvent, error) {
 	sdk, err := GetSDK()
 	if err != nil {
 		return nil, err

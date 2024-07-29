@@ -2,17 +2,17 @@
 
 use crate::cvm::*;
 use anyhow::*;
-use cctrusted_base::api::ParseCcReport;
-use cctrusted_base::api_data::CcReport;
-use cctrusted_base::cc_type::*;
-use cctrusted_base::eventlog::EventLogs;
-use cctrusted_base::tcg::*;
-use cctrusted_base::tdx::{common::*, quote::*, report::*, rtmr::TdxRTMR};
 use core::convert::TryInto;
 use core::mem::*;
 use core::ptr;
 use core::result::Result;
 use core::result::Result::Ok;
+use evidence_api::api::ParseCcReport;
+use evidence_api::api_data::CcReport;
+use evidence_api::cc_type::*;
+use evidence_api::eventlog::EventLogs;
+use evidence_api::tcg::*;
+use evidence_api::tdx::{common::*, quote::*, report::*, rtmr::TdxRTMR};
 use log::info;
 use nix::sys::socket::*;
 use nix::*;
@@ -61,7 +61,7 @@ impl TdxVM {
         let device_node = DeviceNode {
             device_path: TDX_DEVICE_NODE_MAP.get(&version).unwrap().to_owned(),
         };
-        let algo_id = cctrusted_base::tcg::TPM_ALG_SHA384;
+        let algo_id = evidence_api::tcg::TPM_ALG_SHA384;
 
         TdxVM {
             cc_type,

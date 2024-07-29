@@ -1,5 +1,5 @@
-use cctrusted_base::api::*;
-use cctrusted_base::tcg::EventLogEntry;
+use evidence_api::api::*;
+use evidence_api::tcg::EventLogEntry;
 use cctrusted_vm::sdk::API;
 use log::*;
 

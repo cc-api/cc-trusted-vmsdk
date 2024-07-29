@@ -15,7 +15,7 @@ require (
 )
 
 require (
-	github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base v0.0.0-20240418131523-3b0ab7d9578e
+	github.com/cc-api/evidence-api/common/golang/evidence_api v0.0.0-20240729064808-21e12aa810c8 //indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

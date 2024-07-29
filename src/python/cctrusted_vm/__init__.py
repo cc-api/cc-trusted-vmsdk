@@ -1,5 +1,5 @@
 """
-Package to provide CC trusted API for confidential VM
+Package to provide Evidence API for confidential VM
 """
 
 # pylint: disable=syntax-error

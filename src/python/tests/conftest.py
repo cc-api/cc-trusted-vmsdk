@@ -1,15 +1,15 @@
 """Local conftest.py containing directory-specific hook implementations."""
 
 import pytest
-from cctrusted_base.api import CCTrustedApi
-from cctrusted_base.tcg import TcgAlgorithmRegistry
-from cctrusted_base.tdx.rtmr import TdxRTMR
+from evidence_api.api import EvidenceApi
+from evidence_api.tcg import TcgAlgorithmRegistry
+from evidence_api.tdx.rtmr import TdxRTMR
 from cctrusted_vm.cvm import ConfidentialVM
 from cctrusted_vm.sdk import CCTrustedVmSdk
 import tdx_check
 
 cnf_default_alg = {
-    CCTrustedApi.TYPE_CC_TDX: TcgAlgorithmRegistry.TPM_ALG_SHA384
+    EvidenceApi.TYPE_CC_TDX: TcgAlgorithmRegistry.TPM_ALG_SHA384
 }
 """Configurations of default algorithm.
 The configurations could be different for different confidential VMs.
@@ -17,42 +17,42 @@ e.g. TDX use sha384 as the default.
 """
 
 cnf_measurement_cnt = {
-    CCTrustedApi.TYPE_CC_TDX: TdxRTMR.RTMR_COUNT
+    EvidenceApi.TYPE_CC_TDX: TdxRTMR.RTMR_COUNT
 }
 """Configurations of measurement count.
 The configurations could be different for different confidential VMs.
 """
 
 cnf_measurement_check = {
-    CCTrustedApi.TYPE_CC_TDX: tdx_check.tdx_check_measurement_imrs
+    EvidenceApi.TYPE_CC_TDX: tdx_check.tdx_check_measurement_imrs
 }
 """Configurations of measurement check functions.
 The configurations could be different for different confidential VMs.
 """
 
 cnf_quote_check_valid_input = {
-    CCTrustedApi.TYPE_CC_TDX: tdx_check.tdx_check_quote_with_valid_input
+    EvidenceApi.TYPE_CC_TDX: tdx_check.tdx_check_quote_with_valid_input
 }
 """Configurations of quote check functions for valid input.
 The configurations could be different for different confidential VMs.
 """
 
 cnf_quote_check_invalid_input = {
-    CCTrustedApi.TYPE_CC_TDX: tdx_check.tdx_check_quote_with_invalid_input
+    EvidenceApi.TYPE_CC_TDX: tdx_check.tdx_check_quote_with_invalid_input
 }
 """Configurations of quote check functions for invalid input.
 The configurations could be different for different confidential VMs.
 """
 
 cnf_replay_eventlog_check_valid_input = {
-    CCTrustedApi.TYPE_CC_TDX: tdx_check.tdx_check_replay_eventlog_with_valid_input
+    EvidenceApi.TYPE_CC_TDX: tdx_check.tdx_check_replay_eventlog_with_valid_input
 }
 """Configurations of replay_eventlog check functions for valid input.
 The configurations could be different for different confidential VMs.
 """
 
 cnf_replay_eventlog_check_invalid_input = {
-    CCTrustedApi.TYPE_CC_TDX: tdx_check.tdx_check_replay_eventlog_with_invalid_input
+    EvidenceApi.TYPE_CC_TDX: tdx_check.tdx_check_replay_eventlog_with_invalid_input
 }
 """Configurations of replay_eventlog check functions for invalid input.
 The configurations could be different for different confidential VMs.

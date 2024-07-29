@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +18,7 @@ func TestSDKReport(t *testing.T) {
 	assert.Nil(t, err)
 	report, err := sdk.GetCCReport("", "", nil)
 	assert.Nil(t, err)
-	report.Dump(cctrusted_base.QuoteDumpFormatHuman)
+	report.Dump(evidence_api.QuoteDumpFormatHuman)
 
 }
 
@@ -31,6 +31,6 @@ func TestSDKFullEventLog(t *testing.T) {
 
 	el, err := sdk.GetCCEventLog(0, 0)
 	assert.Nil(t, err)
-	el.Dump(cctrusted_base.QuoteDumpFormatHuman)
+	el.Dump(evidence_api.QuoteDumpFormatHuman)
 
 }

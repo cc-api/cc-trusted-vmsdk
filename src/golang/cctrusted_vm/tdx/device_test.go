@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/cc-api/cc-trusted-api/common/golang/cctrusted_base/tdx"
+	"github.com/cc-api/evidence-api/common/golang/evidence_api/tdx"
 
 	"github.com/stretchr/testify/assert"
 )

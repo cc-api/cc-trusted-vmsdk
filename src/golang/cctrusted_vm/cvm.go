@@ -17,7 +17,7 @@ const (
 
 type Device interface {
 	ProbeDevice() error
-	Report(nonce, userData string, extraArgs map[string]any) (evidence_api.CcReport, error)
+	Report(nonce, userData []byte, extraArgs map[string]any) (evidence_api.CcReport, error)
 	Name() string
 	CCType() evidence_api.CC_Type
 	Version() evidence_api.DeviceVersion
@@ -27,7 +27,7 @@ type GenericDevice struct {
 	Device
 }
 
-func (d *GenericDevice) Report(nonce, userData string, extraArgs map[string]any) (evidence_api.CcReport, error) {
+func (d *GenericDevice) Report(nonce, userData []byte, extraArgs map[string]any) (evidence_api.CcReport, error) {
 	var err error
 	if _, err = os.Stat(TSM_PREFIX); os.IsNotExist(err) {
 		return evidence_api.CcReport{}, errors.New("Configfs TSM is not supported in the current environment.")
@@ -36,18 +36,18 @@ func (d *GenericDevice) Report(nonce, userData string, extraArgs map[string]any)
 	// concatenate nonce and userData
 	// check if the data is base64 encoded, if yes, decode before doing hash
 	hasher := sha512.New()
-	if nonce != "" {
-		val, err := base64.StdEncoding.DecodeString(nonce)
+	if nonce != nil {
+		val, err := base64.StdEncoding.DecodeString(string(nonce))
 		if err != nil {
-			hasher.Write([]byte(nonce))
+			hasher.Write(nonce)
 		} else {
 			hasher.Write(val)
 		}
 	}
-	if userData != "" {
-		val, err := base64.StdEncoding.DecodeString(userData)
+	if userData != nil {
+		val, err := base64.StdEncoding.DecodeString(string(userData))
 		if err != nil {
-			hasher.Write([]byte(userData))
+			hasher.Write(userData)
 		} else {
 			hasher.Write(val)
 		}

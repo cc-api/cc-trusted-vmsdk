@@ -37,7 +37,7 @@ func (s *SDK) DumpCCReport(reportBytes []byte) error {
 // GetCCMeasurement implements evidence_api.EvidenceAPI.
 func (s *SDK) GetCCMeasurement(index int, alg evidence_api.TCG_ALG) (evidence_api.TcgDigest, error) {
 	emptyRet := evidence_api.TcgDigest{}
-	report, err := s.GetCCReport("", "", nil)
+	report, err := s.GetCCReport(nil, nil, nil)
 	if err != nil {
 		return emptyRet, err
 	}
@@ -121,7 +121,7 @@ func (s *SDK) internelEventlog() (*evidence_api.EventLogger, error) {
 }
 
 // Report implements EvidenceAPI.
-func (s *SDK) GetCCReport(nonce, userData string, extraArgs map[string]any) (evidence_api.Report, error) {
+func (s *SDK) GetCCReport(nonce, userData []byte, extraArgs map[string]any) (evidence_api.Report, error) {
 	if s.cvm == nil {
 		return nil, errors.New("no available cvm in sdk")
 	}

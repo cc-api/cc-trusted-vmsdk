@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/base64"
 	"encoding/binary"
 	"math"
 	"math/rand"
@@ -31,14 +30,14 @@ var reportCmd = &cobra.Command{
 	},
 }
 
-func makeNonce() string {
+func makeNonce() []byte {
 	num := uint64(rand.Int63n(math.MaxInt64))
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, num)
-	return base64.StdEncoding.EncodeToString(b)
+	return b
 }
 
-func makeUserData() string {
+func makeUserData() []byte {
 	b := []byte("demo user data")
-	return base64.StdEncoding.EncodeToString(b)
+	return b
 }

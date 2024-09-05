@@ -62,7 +62,7 @@ func (t *TDXDevice) initDevice() error {
 }
 
 // Report implements cctrusted_vm.Device, get CC report
-func (t *TDXDevice) Report(nonce, userData string, extraArgs map[string]any) (evidence_api.CcReport, error) {
+func (t *TDXDevice) Report(nonce, userData []byte, extraArgs map[string]any) (evidence_api.CcReport, error) {
 	var resp evidence_api.CcReport
 	var err error
 

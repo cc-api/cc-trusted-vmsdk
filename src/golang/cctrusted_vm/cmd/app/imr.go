@@ -17,7 +17,7 @@ var imrCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		report, err := sdk.GetCCReport("", "", nil)
+		report, err := sdk.GetCCReport(nil, nil, nil)
 		if err != nil {
 			return err
 		}

@@ -21,7 +21,7 @@ type QuoteHandler interface {
 	Quote([tdx.TD_REPORT_LEN]byte) ([]byte, error)
 	// TdReport gets the td report of the td vm, where nonce ad userData
 	// are encoded in base64
-	TdReport(nonce, userData string) ([tdx.TD_REPORT_LEN]byte, error)
+	TdReport(nonce, userData []byte) ([tdx.TD_REPORT_LEN]byte, error)
 }
 
 var _ QuoteHandler = (*QuoteHandler15)(nil)
@@ -34,7 +34,7 @@ type QuoteHandler15 struct {
 }
 
 // TdReport implements QuoteHandler.
-func (q *QuoteHandler15) TdReport(nonce, userData string) ([tdx.TD_REPORT_LEN]byte, error) {
+func (q *QuoteHandler15) TdReport(nonce, userData []byte) ([tdx.TD_REPORT_LEN]byte, error) {
 	tdreport := [tdx.TD_REPORT_LEN]uint8{}
 	var err error
 	var file *os.File
@@ -55,18 +55,18 @@ func (q *QuoteHandler15) TdReport(nonce, userData string) ([tdx.TD_REPORT_LEN]by
 	// check if the data is base64 encoded, if yes, decode before doing hash
 	hasher := sha512.New()
 	if len(nonce) > 0 {
-		nonceDecoded, err := base64.StdEncoding.DecodeString(nonce)
+		nonceDecoded, err := base64.StdEncoding.DecodeString(string(nonce))
 		if err != nil {
-			hasher.Write([]byte(nonce))
+			hasher.Write(nonce)
 		} else {
 			hasher.Write(nonceDecoded)
 		}
 	}
 
 	if len(userData) > 0 {
-		userDataDecoded, err := base64.StdEncoding.DecodeString(userData)
+		userDataDecoded, err := base64.StdEncoding.DecodeString(string(userData))
 		if err != nil {
-			hasher.Write([]byte(userData))
+			hasher.Write(userData)
 		} else {
 			hasher.Write(userDataDecoded)
 		}

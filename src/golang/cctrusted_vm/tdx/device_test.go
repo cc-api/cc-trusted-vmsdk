@@ -22,8 +22,8 @@ func TestReport15(t *testing.T) {
 	fmt.Println(res)
 	assert.Equal(t, true, res)
 
-	nonce := "IXUKoBO1UM3c1wopN4sY"
-	userData := "MTIzNDU2NzgxMjM0NTY3ODEyMzQ1Njc4MTIzNDU2NzgxMjM0NTY3ODEyMzQ1Njc4"
+	nonce := []byte{"IXUKoBO1UM3c1wopN4sY"}
+	userData := []byte{"MTIzNDU2NzgxMjM0NTY3ODEyMzQ1Njc4MTIzNDU2NzgxMjM0NTY3ODEyMzQ1Njc4"}
 	tdreport, err := device.TdReport(nonce, userData)
 	assert.Nil(t, err)
 	t.Log(tdreport)
